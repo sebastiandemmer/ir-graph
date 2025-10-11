@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cytoscape Graph Editor</title>
+    <!-- Link to our stylesheet -->
+    <link href="static/style.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="main-container">
+        <!-- Side Panel for Forms -->
+        <div id="side-panel">
+            <h1>Graph Editor</h1>
+            
+            <!-- Form to create a new graph -->
+            <div class="form-container">
+                <h2>Create New Graph</h2>
+                <form id="create-graph-form">
+                    <label for="graph-name">Graph Name:</label>
+                    <input type="text" id="graph-name" name="graph-name" required placeholder="e.g., my_new_graph">
+                    <button type="submit">Create Graph</button>
+                </form>
+            </div>
+
+            <!-- Form to add a new node to the current graph -->
+            <div class="form-container">
+                <h2>Add Node (to Graph <span id="current-graph-id">0</span>)</h2>
+                <form id="add-node-form">
+                    <label for="node-name">Node Name:</label>
+                    <input type="text" id="node-name" name="node-name" required placeholder="e.g., new_node">
+                    <label for="node-category">Category:</label>
+                    <select id="node-category" name="node-category">
+                        <option value="Computer">Computer</option>
+                        <option value="Server">Server</option>
+                        <option value="User">User</option>
+                    </select>
+                    <button type="submit">Add Node</button>
+                </form>
+            </div>
+
+            <!-- Form to add a new edge to the current graph -->
+            <div class="form-container">
+                <h2>Add Edge (to Graph <span class="current-graph-id-edge">0</span>)</h2>
+                <form id="add-edge-form">
+                    <label for="start-node">Start Node:</label>
+                    <input type="text" id="start-node" name="start-node" required placeholder="Name of existing node">
+                    <label for="end-node">End Node:</label>
+                    <input type="text" id="end-node" name="end-node" required placeholder="Name of existing node">
+                    <button type="submit">Add Edge</button>
+                </form>
+            </div>
+            <!-- Form to save graphs to JSON file -->
+            <div class="form-container">
+                <h2>Save graphs to JSON </h2>
+                <form id="save-graphs-form">
+                    <button type="submit">Save Graphs</button>
+                </form>
+            </div>
+            <!-- Form to save graphs to PNG file -->
+            <div class="form-container">
+                <h2>Save graphs to PNG </h2>
+                <form id="export-graph-png-form">
+                    <button type="submit">Export this Graph to PNG</button>
+                </form>
+            </div>
+             <div id="status-message"></div>
+        </div>
+
+        <!-- This is where the graph will be rendered -->
+        <div id="cy"></div>
+    </div>
+
+    <!-- Load the Cytoscape.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    
+    <!-- Load our custom script -->
+    <script src="static/script.js"></script>
+</body>
+</html>

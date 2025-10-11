@@ -1,0 +1,56 @@
+{
+    "graphs": [
+        {
+            "name": "test",
+            "nodes": [
+                {
+                    "name": "123",
+                    "position_x": -83,
+                    "position_y": 75,
+                    "category": "Server"
+                },
+                {
+                    "name": "321",
+                    "position_x": 195,
+                    "position_y": 149,
+                    "category": "Computer"
+                },
+                {
+                    "name": "444",
+                    "position_x": -147,
+                    "position_y": 175,
+                    "category": "User"
+                },
+                {
+                    "name": "333",
+                    "position_x": 112,
+                    "position_y": 255,
+                    "category": "Default"
+                },
+                {
+                    "name": "comp",
+                    "position_x": 221,
+                    "position_y": 235,
+                    "category": "Computer"
+                }
+            ],
+            "edges": [
+                {
+                    "start": "123",
+                    "end": "321",
+                    "directed": true
+                },
+                {
+                    "start": "321",
+                    "end": "123",
+                    "directed": true
+                },
+                {
+                    "start": "444",
+                    "end": "comp",
+                    "directed": true
+                }
+            ]
+        }
+    ]
+}
