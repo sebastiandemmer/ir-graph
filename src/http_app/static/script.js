@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let cy;
     // For now, we are hardcoding the graph ID we want to view and edit.
     let currentGraphId = 0;
-    const API_BASE_URL = 'http://127.0.0.1:8000';
+    const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
     const statusMessageEl = document.getElementById('status-message');
 
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         selector: "node[category = 'Computer']",
                         style: {
-                            'background-image': 'assets/wired-outline-478-computer-display-hover-angle.svg',
+                            'background-image': '/static/assets/computer.svg',
                             'background-fit': 'contain'
                         }
                     },
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         selector: "node[category = 'Server']",
                         style: {
-                            'background-image': 'assets/wired-outline-57-server-hover-pinch.svg',
+                            'background-image': '/static/assets/server.svg',
                             'width': '60px', 
                             'height': '60px',
                             'background-fit': 'cover'
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {
                         selector: "node[category = 'User']",
                         style: {
-                            'background-image': 'assets/wired-outline-21-avatar-hover-jumping.svg',
+                            'background-image': '/static/assets/user.svg',
                             'background-fit': 'contain'
                         }
                     },
