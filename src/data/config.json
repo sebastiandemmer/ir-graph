@@ -1,0 +1,27 @@
+{
+  "node_categories": [
+    {
+      "name": "Computer",
+      "icon": "/static/assets/computer.svg"
+    },
+    {
+      "name": "Server",
+      "icon": "/static/assets/server.svg"
+    },
+    {
+      "name": "User",
+      "icon": "/static/assets/user.svg"
+    },
+    {
+      "name": "Dummy User",
+      "icon": "/static/assets/user.svg"
+    },
+    {
+      "name": "Default"
+    }
+  ],
+  "color_schemes": {
+    "edge_color": "#ccc",
+    "target_arrow_color": "#ccc"
+  }
+}

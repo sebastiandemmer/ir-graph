@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
         graphs.load_from_json()
     except (JSONDecodeError,FileNotFoundError):
         logging.error(f"Error loading graphs from {graphs.json_file_path}")
-        graphs = []
+        graphs = Graphs()
     yield
     graphs.save_to_json()
 
@@ -40,6 +40,7 @@ def create_app(
     from http_app.routes import init_routes
     
     app_config = test_config or AppConfig()
+    app_config.load_ui_config()
 
     """
     The config is submitted here at runtime, this means
@@ -52,8 +53,6 @@ def create_app(
 
     # ref = application_init(app_config, test_di_container)
     # ref.di_container.wire(packages=["http_app"])
-
-    graphs = []
 
     app = FastAPI(lifespan=lifespan)
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cytoscape Graph Editor</title>
     <!-- Link to our stylesheet -->
-    <link href="static/style.css" rel="stylesheet" />
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet" />
 </head>
 <body>
     <div class="main-container">
@@ -24,6 +24,13 @@
                 </form>
             </div>
 
+            <!-- Form to select current graph -->
+            <div class="form-container">
+                <h2>Select Current Graph</h2>
+                <label for="graph-selector">Graph:</label>
+                <select id="graph-selector" name="graph-selector"></select>
+            </div>
+
             <!-- Form to add a new node to the current graph -->
             <div class="form-container">
                 <h2>Add Node (to Graph <span id="current-graph-id">0</span>)</h2>
@@ -32,9 +39,6 @@
                     <input type="text" id="node-name" name="node-name" required placeholder="e.g., new_node">
                     <label for="node-category">Category:</label>
                     <select id="node-category" name="node-category">
-                        <option value="Computer">Computer</option>
-                        <option value="Server">Server</option>
-                        <option value="User">User</option>
                     </select>
                     <button type="submit">Add Node</button>
                 </form>
@@ -76,6 +80,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
     
     <!-- Load our custom script -->
-    <script src="static/script.js"></script>
+    <script src="{{ url_for('static', path='/script.js') }}"></script>
 </body>
 </html>

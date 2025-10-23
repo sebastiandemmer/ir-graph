@@ -30,8 +30,6 @@ class NodesModel(BaseModel):
 
 
 router = APIRouter()
-# router_v1 = APIRouter(prefix="/books/v1")
-# router_v2 = APIRouter(prefix="/books/v2")
 
 @router.get("/graphs/{graph_id}")
 async def get_graphs(graph_id: int):
@@ -39,7 +37,7 @@ async def get_graphs(graph_id: int):
 
 @router.get("/graphs/")
 async def get_graphs():
-    return {"graphs":graphs}
+    return graphs.graphs
 
 @router.post("/graphs/")
 async def create_graph(graph: GraphModel):

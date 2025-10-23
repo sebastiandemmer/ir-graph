@@ -8,7 +8,7 @@ from irgraph.Node import Node
 class Graphs(object):
     def __init__(self):
         self.graphs = []
-        self.json_file_path = 'graphs.json'
+        self.json_file_path = 'data/graphs.json'
 
     def get_graph_by_id(self, graph_id: int):
         if 0 <= graph_id < len(self.graphs):
@@ -19,8 +19,7 @@ class Graphs(object):
         logging.info("reading graph from file {filepath}")
         with open(self.json_file_path) as json_file:
             graphs_json = json.load(json_file).get("graphs")
-            graphs = list(map(self.graph_from_dict, graphs_json))
-        return graphs
+            self.graphs = list(map(self.graph_from_dict, graphs_json))
         
     def graph_from_dict(self, graph_object: dict):
             graph = Graph(name=graph_object.get("name"))

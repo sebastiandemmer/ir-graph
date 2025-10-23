@@ -5,20 +5,20 @@
             "nodes": [
                 {
                     "name": "123",
-                    "position_x": -83,
-                    "position_y": 75,
+                    "position_x": -156,
+                    "position_y": 81,
                     "category": "Server"
                 },
                 {
                     "name": "321",
-                    "position_x": 195,
-                    "position_y": 149,
+                    "position_x": 222,
+                    "position_y": 107,
                     "category": "Computer"
                 },
                 {
                     "name": "444",
-                    "position_x": -147,
-                    "position_y": 175,
+                    "position_x": -82,
+                    "position_y": 212,
                     "category": "User"
                 },
                 {
@@ -29,8 +29,8 @@
                 },
                 {
                     "name": "comp",
-                    "position_x": 221,
-                    "position_y": 235,
+                    "position_x": 279,
+                    "position_y": 218,
                     "category": "Computer"
                 }
             ],
@@ -51,6 +51,11 @@
                     "directed": true
                 }
             ]
+        },
+        {
+            "name": "ttt321",
+            "nodes": [],
+            "edges": []
         }
     ]
 }
