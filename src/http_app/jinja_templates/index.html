@@ -1,86 +1,175 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cytoscape Graph Editor</title>
     <!-- Link to our stylesheet -->
     <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+        rel="stylesheet" />
+    <!-- Keep icons for now, but remove fonts if strictly offline. The user asked to fix CORS for fonts specifically. -->
+    <style>
+        /* Fallback for icons if they fail to load */
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="main-container">
-        <!-- Side Panel for Forms -->
-        <div id="side-panel">
-            <h1>Graph Editor</h1>
-            
-            <!-- Form to create a new graph -->
-            <div class="form-container">
-                <h2>Create New Graph</h2>
-                <form id="create-graph-form">
-                    <label for="graph-name">Graph Name:</label>
-                    <input type="text" id="graph-name" name="graph-name" required placeholder="e.g., my_new_graph">
-                    <button type="submit">Create Graph</button>
-                </form>
+    <div class="app-container">
+        <!-- Side Panel -->
+        <aside class="side-panel">
+            <header class="panel-header">
+                <h1>Graph Editor</h1>
+                <p class="subtitle">v2.1</p>
+            </header>
+
+            <div class="panel-content">
+
+                <!-- View Options -->
+                <section class="card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon">visibility</span>
+                        <h2>View Options</h2>
+                    </div>
+                    <form id="view-options-form">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="toggle-node-border" name="node-border">
+                            <label for="toggle-node-border">Show Node Borders</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="toggle-text-below" name="text-below" checked>
+                            <label for="toggle-text-below">Text Below Node</label>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Form to create a new graph -->
+                <section class="card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon">add_circle</span>
+                        <h2>New Graph</h2>
+                    </div>
+                    <form id="create-graph-form">
+                        <div class="form-group">
+                            <label for="graph-name">Name</label>
+                            <input type="text" id="graph-name" name="graph-name" required
+                                placeholder="My Amazing Graph">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Graph</button>
+                    </form>
+                </section>
+
+                <!-- Form to add a new node -->
+                <section class="card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon">person_add</span>
+                        <h2>Add Node</h2>
+                        <span class="badge" id="current-graph-id" title="Current Graph ID">ID: -</span>
+                    </div>
+                    <form id="add-node-form">
+                        <div class="form-group">
+                            <label for="node-name">Name</label>
+                            <input type="text" id="node-name" name="node-name" required placeholder="Node Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="node-category">Category</label>
+                            <select id="node-category" name="node-category"></select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Add Node</button>
+                    </form>
+                </section>
+
+                <!-- Form to add a new edge -->
+                <section class="card">
+                    <div class="card-header">
+                        <span class="material-symbols-rounded icon">timeline</span>
+                        <h2>Add Edge</h2>
+                    </div>
+                    <form id="add-edge-form">
+                        <div class="form-group">
+                            <label for="start-node">Source</label>
+                            <input type="text" id="start-node" name="start-node" required placeholder="Source Node">
+                        </div>
+                        <div class="form-group">
+                            <label for="end-node">Target</label>
+                            <input type="text" id="end-node" name="end-node" required placeholder="Target Node">
+                        </div>
+                        <div class="form-group">
+                            <label for="edge-description">Description</label>
+                            <input type="text" id="edge-description" name="edge-description"
+                                placeholder="Optional description">
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Add Edge</button>
+                    </form>
+                </section>
+
+                <!-- Actions -->
+                <section class="card actions-card">
+                    <h2>Actions</h2>
+                    <div class="action-buttons">
+                        <form id="save-graphs-form">
+                            <button type="submit" class="btn btn-outline" title="Save all graphs to JSON">
+                                <span class="material-symbols-rounded">save</span> Save Data
+                            </button>
+                        </form>
+                        <form id="export-graph-png-form">
+                            <button type="submit" class="btn btn-outline" title="Export current view as PNG">
+                                <span class="material-symbols-rounded">image</span> Export PNG
+                            </button>
+                        </form>
+                    </div>
+                </section>
             </div>
 
-            <!-- Form to add a new node to the current graph -->
-            <div class="form-container">
-                <h2>Add Node (to Graph <span id="current-graph-id">0</span>)</h2>
-                <form id="add-node-form">
-                    <label for="node-name">Node Name:</label>
-                    <input type="text" id="node-name" name="node-name" required placeholder="e.g., new_node">
-                    <label for="node-category">Category:</label>
-                    <select id="node-category" name="node-category">
-                    </select>
-                    <button type="submit">Add Node</button>
-                </form>
-            </div>
+            <footer class="panel-footer">
+                <small>&copy; 2026 IR Graph</small>
+            </footer>
+        </aside>
 
-            <!-- Form to add a new edge to the current graph -->
-            <div class="form-container">
-                <h2>Add Edge (to Graph <span class="current-graph-id-edge">0</span>)</h2>
-                <form id="add-edge-form">
-                    <label for="start-node">Start Node:</label>
-                    <input type="text" id="start-node" name="start-node" required placeholder="Name of existing node">
-                    <label for="end-node">End Node:</label>
-                    <input type="text" id="end-node" name="end-node" required placeholder="Name of existing node">
-                    <button type="submit">Add Edge</button>
-                </form>
-            </div>
-            <!-- Form to save graphs to JSON file -->
-            <div class="form-container">
-                <h2>Save graphs to JSON </h2>
-                <form id="save-graphs-form">
-                    <button type="submit">Save Graphs</button>
-                </form>
-            </div>
-            <!-- Form to save graphs to PNG file -->
-            <div class="form-container">
-                <h2>Save graphs to PNG </h2>
-                <form id="export-graph-png-form">
-                    <button type="submit">Export this Graph to PNG</button>
-                </form>
-            </div>
-             <div id="status-message"></div>
-        </div>
+        <!-- Main Content -->
+        <main class="content-area">
+            <header class="top-bar">
+                <div class="graph-info">
+                    <h2 id="main-graph-title">Select a Graph</h2>
+                </div>
+                <div class="graph-controls">
+                    <label for="graph-selector" class="sr-only">Select Graph</label>
+                    <div class="select-wrapper">
+                        <select id="graph-selector" name="graph-selector"></select>
+                    </div>
+                </div>
+            </header>
 
-        <div class="content-area">
-            <div class="graph-header">
-                <h1 id="main-graph-title">No Graph Selected</h1>
-                <div class="graph-selector-wrapper">
-                    <label for="graph-selector">Select Graph:</label>
-                    <select id="graph-selector" name="graph-selector"></select>
+            <div id="cy" class="graph-canvas">
+                <div class="empty-state">
+                    <span class="material-symbols-rounded">hub</span>
+                    <p>Select or create a graph to begin</p>
                 </div>
             </div>
-            <!-- This is where the graph will be rendered -->
-            <div id="cy"></div>
-        </div>
+        </main>
     </div>
 
-    <!-- Load the Cytoscape.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Load the Cytoscape.js library from local static file -->
+    <script src="{{ url_for('static', path='/cytoscape.min.js') }}"></script>
     <!-- Load our custom script -->
     <script src="{{ url_for('static', path='/script.js') }}"></script>
 </body>
+
 </html>
