@@ -52,9 +52,6 @@ This project is built with Python 3.10+ and uses [uv](https://github.com/astral-
     The easiest way to run the local development server (with hot-reload):
     
     ```bash
-    # Ensure src is in your python path
-    export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-    
     # Run the dev server script
     python src/http_app/dev_server.py
     ```
