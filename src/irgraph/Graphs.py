@@ -5,10 +5,28 @@ import logging
 from irgraph.Graph import Graph
 from irgraph.Node import Node
 
+import os
+
 class Graphs(object):
     def __init__(self):
         self.graphs = []
-        self.json_file_path = 'data/graphs.json'
+        # Resolves to src/data/graphs.json regardless of CWD
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        # Logic check:
+        # __file__ = src/irgraph/Graphs.py
+        # dirname = src/irgraph
+        # dirname = src
+        # We want src/data/graphs.json
+        # Wait, data is in src/data.
+        # So we want to go up one level from irgraph to src.
+        
+        # __file__ = src/irgraph/Graphs.py
+        # dirname(__file__) = src/irgraph
+        # dirname(src/irgraph) = src
+        # join(src, 'data', 'graphs.json')
+        
+        src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
+        self.json_file_path = os.path.join(src_dir, 'data', 'graphs.json')
 
     def get_graph_by_id(self, graph_id: int):
         if 0 <= graph_id < len(self.graphs):
@@ -27,7 +45,7 @@ class Graphs(object):
                 new_node = Node(name=node.get("name"), category=node.get("category", None), position_x=node.get("position_x", None), position_y=node.get("position_y", None))
                 graph.add_node(new_node)
             for edge in graph_object.get("edges", []):
-                graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"))
+                graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"))
             return graph
 
     def save_to_json(self) -> None:
