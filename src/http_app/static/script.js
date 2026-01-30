@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusMessageEl = document.getElementById('status-message');
     const currentGraphIdSpan = document.getElementById('current-graph-id');
     const currentGraphIdEdgeSpan = document.querySelector('.current-graph-id-edge');
+    const mainGraphTitle = document.getElementById('main-graph-title');
 
     // A timer for debouncing the save operation
     let saveDebounceTimer;
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear current graph ID displays
             currentGraphIdSpan.textContent = 'N/A';
             currentGraphIdEdgeSpan.textContent = 'N/A';
+            mainGraphTitle.textContent = 'No Graph Selected';
             if (cy) {
                 cy.destroy(); // Destroy existing Cytoscape instance if any
                 cy = null;
@@ -200,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear current graph ID displays on error
             currentGraphIdSpan.textContent = 'Error';
             currentGraphIdEdgeSpan.textContent = 'Error';
+            mainGraphTitle.textContent = 'Error Loading Graph';
             if (cy) {
                 cy.destroy();
                 cy = null;
@@ -232,6 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Set currentGraphId to the first graph's ID (index 0)
                 currentGraphId = 0;
                 graphSelector.value = currentGraphId; // Select the first option in the dropdown
+                mainGraphTitle.textContent = graphsList[0].name || `Graph 0`;
                 initializeGraph(currentGraphId);
             } else {
                 // No graphs available
@@ -431,6 +435,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attach event listener for graph selection dropdown
     document.getElementById('graph-selector').addEventListener('change', (event) => {
         currentGraphId = parseInt(event.target.value, 10);
+        const selectedOption = event.target.options[event.target.selectedIndex];
+        mainGraphTitle.textContent = selectedOption.textContent;
         initializeGraph(currentGraphId);
     });
 });

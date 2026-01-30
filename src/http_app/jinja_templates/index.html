@@ -24,13 +24,6 @@
                 </form>
             </div>
 
-            <!-- Form to select current graph -->
-            <div class="form-container">
-                <h2>Select Current Graph</h2>
-                <label for="graph-selector">Graph:</label>
-                <select id="graph-selector" name="graph-selector"></select>
-            </div>
-
             <!-- Form to add a new node to the current graph -->
             <div class="form-container">
                 <h2>Add Node (to Graph <span id="current-graph-id">0</span>)</h2>
@@ -72,13 +65,21 @@
              <div id="status-message"></div>
         </div>
 
-        <!-- This is where the graph will be rendered -->
-        <div id="cy"></div>
+        <div class="content-area">
+            <div class="graph-header">
+                <h1 id="main-graph-title">No Graph Selected</h1>
+                <div class="graph-selector-wrapper">
+                    <label for="graph-selector">Select Graph:</label>
+                    <select id="graph-selector" name="graph-selector"></select>
+                </div>
+            </div>
+            <!-- This is where the graph will be rendered -->
+            <div id="cy"></div>
+        </div>
     </div>
 
     <!-- Load the Cytoscape.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
-    
     <!-- Load our custom script -->
     <script src="{{ url_for('static', path='/script.js') }}"></script>
 </body>
