@@ -2,5 +2,7 @@ from common import AppConfig
 from http_app import context
 
 
-def get_app_config() -> AppConfig:
-    return context.app_config.get()
+from fastapi import Request
+
+def get_app_config(request: Request) -> AppConfig:
+    return request.app.state.app_config

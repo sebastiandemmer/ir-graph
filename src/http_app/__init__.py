@@ -49,18 +49,20 @@ def create_app(
     is evaluated before this function is called.
     A context variable will achieve the same purpose.
     """
-    context.app_config.set(app_config)
+    # context.app_config.set(app_config)
 
     # ref = application_init(app_config, test_di_container)
     # ref.di_container.wire(packages=["http_app"])
 
     app = FastAPI(lifespan=lifespan)
+    app.state.app_config = app_config
 
     app = FastAPI(
         debug=app_config.DEBUG,
         lifespan=lifespan,
         title=app_config.APP_NAME,
     )
+    app.state.app_config = app_config
     # init_exception_handlers(app)
 
     # if app_config.CORS_ORIGINS:

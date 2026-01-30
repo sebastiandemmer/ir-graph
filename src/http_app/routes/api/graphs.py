@@ -17,7 +17,7 @@ class EdgeModel(BaseModel):
     # model_config = ConfigDict(arbitrary_types_allowed=True)
     start_node: str
     end_node: str
-
+    description: str | None = None
 
 class NodeModel(BaseModel):
     name: str
@@ -78,6 +78,6 @@ async def create_edge(graph_id: int, edge_model: EdgeModel):
     if start_node is None or end_node is None:
         return "Node names incorrect"
     else:
-        new_edge = Edge(start=start_node, end=end_node)
+        new_edge = Edge(start=start_node, end=end_node, description=edge_model.description)
         graph.add_edge(new_edge)
     return graph
