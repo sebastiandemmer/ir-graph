@@ -1,5 +1,6 @@
 import json
 from typing import Any, Dict, Literal, Optional
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -52,6 +53,12 @@ class AppConfig(BaseSettings):
 
     def load_ui_config(self, path: str = "data/config.json") -> None:
         try:
+            # If default path, resolve relative to this file's location
+            if path == "data/config.json":
+                # src/common/config.py -> src/data/config.json
+                resolved_path = Path(__file__).parent.parent / "data" / "config.json"
+                path = str(resolved_path)
+
             with open(path, "r") as f:
                 config_data = json.load(f)
                 self.UI_CONFIG = UIConfig.model_validate(config_data)
