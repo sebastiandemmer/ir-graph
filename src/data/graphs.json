@@ -4,51 +4,78 @@
             "name": "test",
             "nodes": [
                 {
-                    "name": "123",
-                    "position_x": -156,
-                    "position_y": 81,
+                    "name": "321",
+                    "position_x": 28,
+                    "position_y": -21,
                     "category": "Server"
                 },
                 {
-                    "name": "321",
-                    "position_x": 222,
-                    "position_y": 107,
-                    "category": "Computer"
-                },
-                {
                     "name": "444",
-                    "position_x": -82,
-                    "position_y": 212,
+                    "position_x": -2,
+                    "position_y": 94,
                     "category": "User"
                 },
                 {
-                    "name": "333",
-                    "position_x": 112,
-                    "position_y": 255,
-                    "category": "Default"
+                    "name": "3333",
+                    "position_x": 140,
+                    "position_y": 144,
+                    "category": "Computer"
                 },
                 {
                     "name": "comp",
-                    "position_x": 279,
-                    "position_y": 218,
+                    "position_x": 304,
+                    "position_y": 95,
                     "category": "Computer"
                 }
             ],
             "edges": [
                 {
-                    "start": "123",
-                    "end": "321",
-                    "directed": true
+                    "start": "3333",
+                    "end": "comp",
+                    "directed": true,
+                    "description": ""
                 },
                 {
-                    "start": "321",
-                    "end": "123",
-                    "directed": true
+                    "start": "comp",
+                    "end": "321",
+                    "directed": true,
+                    "description": "new edge"
+                },
+                {
+                    "start": "444",
+                    "end": "321",
+                    "directed": true,
+                    "description": ""
+                },
+                {
+                    "start": "444",
+                    "end": "321",
+                    "directed": true,
+                    "description": ""
+                },
+                {
+                    "start": "444",
+                    "end": "3333",
+                    "directed": true,
+                    "description": ""
                 },
                 {
                     "start": "444",
                     "end": "comp",
-                    "directed": true
+                    "directed": true,
+                    "description": "aaaedge"
+                },
+                {
+                    "start": "444",
+                    "end": "comp",
+                    "directed": true,
+                    "description": ""
+                },
+                {
+                    "start": "321",
+                    "end": "444",
+                    "directed": true,
+                    "description": ""
                 }
             ]
         },
