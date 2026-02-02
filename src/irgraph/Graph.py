@@ -56,7 +56,7 @@ class Graph(object):
             raise TypeError("Node must be type 'Node'")
 
         if edge.start not in self.nodes:
-            raise ValueError(f"Start node {edge.node} is not in graph")
+            raise ValueError(f"Start node {edge.start.name} is not in graph")
         
         if edge.end not in self.nodes:
             raise ValueError(f"Start node {edge.end} is not in graph")
@@ -91,6 +91,49 @@ class Graph(object):
             new_edge = Edge(start=start_node, end=end_node, directed=directed, description=description)
             self.add_edge(new_edge)
             return new_edge
+
+    def delete_edge(self, start_node: str, end_node: str) -> bool:
+        for i, edge in enumerate(self.edges):
+            if edge.start.name == start_node and edge.end.name == end_node:
+                del self.edges[i]
+                return True
+        return False
+
+    def delete_node(self, node_name: str) -> bool:
+        """Deletes a node by name and all associated edges."""
+        node_to_delete = self.get_node_by_name(node_name)
+        if not node_to_delete:
+            return False
+        
+        # Remove associated edges
+        self.edges = [e for e in self.edges if e.start.name != node_name and e.end.name != node_name]
+        
+        # Remove node
+        self.nodes = [n for n in self.nodes if n.name != node_name]
+        return True
+
+    def update_node(self, old_name: str, new_name: str, new_category: str = None) -> bool:
+        """Updates a node's name and optional category."""
+        node = self.get_node_by_name(old_name)
+        if not node:
+            return False
+
+        if new_name != old_name:
+            if self.get_node_by_name(new_name):
+                return False # New name already exists
+            node.name = new_name
+            
+        if new_category is not None:
+            node.category = new_category
+            
+        return True
+
+    def update_edge(self, start_node: str, end_node: str, description: str) -> bool:
+        for edge in self.edges:
+            if edge.start.name == start_node and edge.end.name == end_node:
+                edge.description = description
+                return True
+        return False
 
     def toJSON(self):
         return {

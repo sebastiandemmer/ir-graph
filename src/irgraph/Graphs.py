@@ -48,6 +48,19 @@ class Graphs(object):
                 graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"))
             return graph
 
+    def delete_graph(self, graph_id: int) -> bool:
+        if 0 <= graph_id < len(self.graphs):
+            del self.graphs[graph_id]
+            return True
+        return False
+    
+    def update_graph_name(self, graph_id: int, new_name: str) -> bool:
+        graph = self.get_graph_by_id(graph_id)
+        if graph:
+            graph.name = new_name
+            return True
+        return False
+
     def save_to_json(self) -> None:
         logging.info("Writing graph to file {filepath}")
         with open(self.json_file_path, 'w') as json_file:
