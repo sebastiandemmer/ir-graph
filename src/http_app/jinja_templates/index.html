@@ -54,22 +54,10 @@
                             <input type="checkbox" id="toggle-text-below" name="text-below" checked>
                             <label for="toggle-text-below">Text Below Node</label>
                         </div>
-                    </form>
-                </section>
-
-                <!-- Form to create a new graph -->
-                <section class="card">
-                    <div class="card-header">
-                        <span class="material-symbols-rounded icon">add_circle</span>
-                        <h2>New Graph</h2>
-                    </div>
-                    <form id="create-graph-form">
-                        <div class="form-group">
-                            <label for="graph-name">Name</label>
-                            <input type="text" id="graph-name" name="graph-name" required
-                                placeholder="My Amazing Graph">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="toggle-edge-desc" name="edge-desc" checked>
+                            <label for="toggle-edge-desc">Show Edge Descriptions</label>
                         </div>
-                        <button type="submit" class="btn btn-primary">Create Graph</button>
                     </form>
                 </section>
 
@@ -78,7 +66,6 @@
                     <div class="card-header">
                         <span class="material-symbols-rounded icon">person_add</span>
                         <h2>Add Node</h2>
-                        <span class="badge" id="current-graph-id" title="Current Graph ID">ID: -</span>
                     </div>
                     <form id="add-node-form">
                         <div class="form-group">
@@ -93,28 +80,24 @@
                     </form>
                 </section>
 
-                <!-- Form to add a new edge -->
+                <!-- Form to create a new graph -->
                 <section class="card">
                     <div class="card-header">
-                        <span class="material-symbols-rounded icon">timeline</span>
-                        <h2>Add Edge</h2>
+                        <span class="material-symbols-rounded icon">add_circle</span>
+                        <h2>Manage Graph</h2>
                     </div>
-                    <form id="add-edge-form">
+                    <form id="create-graph-form">
                         <div class="form-group">
-                            <label for="start-node">Source</label>
-                            <input type="text" id="start-node" name="start-node" required placeholder="Source Node">
+                            <label for="graph-name">Name</label>
+                            <input type="text" id="graph-name" name="graph-name" required
+                                placeholder="My Amazing Graph">
                         </div>
-                        <div class="form-group">
-                            <label for="end-node">Target</label>
-                            <input type="text" id="end-node" name="end-node" required placeholder="Target Node">
-                        </div>
-                        <div class="form-group">
-                            <label for="edge-description">Description</label>
-                            <input type="text" id="edge-description" name="edge-description"
-                                placeholder="Optional description">
-                        </div>
-                        <button type="submit" class="btn btn-secondary">Add Edge</button>
+                        <button type="submit" class="btn btn-primary">Create New Graph</button>
                     </form>
+                    <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                        <button id="delete-graph-btn" class="btn btn-danger"
+                            style="width: 100%; background-color: #ef4444; color: white;">Delete Current Graph</button>
+                    </div>
                 </section>
 
                 <!-- Actions -->
@@ -145,6 +128,7 @@
             <header class="top-bar">
                 <div class="graph-info">
                     <h2 id="main-graph-title">Select a Graph</h2>
+                    <span class="badge" id="current-graph-id" title="Current Graph ID">ID: -</span>
                 </div>
                 <div class="graph-controls">
                     <label for="graph-selector" class="sr-only">Select Graph</label>
@@ -163,11 +147,81 @@
         </main>
     </div>
 
+    <!-- Edit Node Modal -->
+    <div id="edit-node-modal" class="modal-overlay" style="display: none;">
+        <div class="modal card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon">edit</span>
+                <h2>Edit Node</h2>
+            </div>
+            <form id="edit-node-form">
+                <input type="hidden" id="edit-node-original-name">
+                <div class="form-group">
+                    <label for="edit-node-name">Name</label>
+                    <input type="text" id="edit-node-name" name="edit-node-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-node-category">Category</label>
+                    <select id="edit-node-category" name="edit-node-category"></select>
+                </div>
+                <div class="modal-actions"
+                    style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                    <button type="button" id="cancel-edit-node" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Edge Modal -->
+    <div id="edit-edge-modal" class="modal-overlay" style="display: none;">
+        <div class="modal card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon">edit</span>
+                <h2>Edit Connection</h2>
+            </div>
+            <form id="edit-edge-form">
+                <input type="hidden" id="edit-edge-source">
+                <input type="hidden" id="edit-edge-target">
+                <div class="form-group">
+                    <label for="edit-edge-description">Description</label>
+                    <input type="text" id="edit-edge-description" name="edit-edge-description"
+                        placeholder="e.g. Lateral Movement">
+                </div>
+                <div class="modal-actions"
+                    style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                    <button type="button" id="cancel-edit-edge" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog Modal -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon" style="color: var(--danger);">warning</span>
+                <h2>Confirm Action</h2>
+            </div>
+            <p id="confirm-modal-message" style="margin-bottom: 20px; color: var(--text-main);">Are you sure?</p>
+            <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" id="cancel-confirm" class="btn btn-outline">Cancel</button>
+                <button type="button" id="ok-confirm" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
     <!-- Load the Cytoscape.js library from local static file -->
     <script src="{{ url_for('static', path='/cytoscape.min.js') }}"></script>
+    <!-- Load Cytoscape Extensions -->
+    <script src="{{ url_for('static', path='/lodash.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape-edgehandles.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape-cxtmenu.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape-undo-redo.js') }}"></script>
     <!-- Load our custom script -->
     <script src="{{ url_for('static', path='/script.js') }}"></script>
 </body>
