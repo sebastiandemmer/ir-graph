@@ -3,7 +3,7 @@ authors = [
     {name = "Sebastian Demmer", email = "sebastian.demmer0@gmail.com"},
 ]
 requires-python = "<3.14,>=3.10"
-name = "IR-Graph"
+name = "ir-graph"
 version = "0.1.0"
 description = ""
 readme = "README.md"

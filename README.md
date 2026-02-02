@@ -23,7 +23,7 @@ This project is built with Python 3.10+ and uses [uv](https://github.com/astral-
 1.  **Clone the repository**
     ```bash
     git clone <repository_url>
-    cd ir-graph-2
+    cd ir-graph
     ```
 
 2.  **Install dependencies**
