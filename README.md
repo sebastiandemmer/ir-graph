@@ -66,9 +66,13 @@ This project is built with Python 3.10+ and uses [uv](https://github.com/astral-
 
 ### Implemented
 - [x] **Core Graph**: Node/Edge creation and manipulation.
-- [x] **Persistence**: JSON-based save/load.
+- [x] **Persistence**: Auto-saving to JSON on every modification to prevent data loss.
 - [x] **Visuals**: Custom icons (SVG/PNG), basic coloring.
 - [x] **Management**: Multi-graph switching.
+- [x] **Interaction**:
+    -   Radial Context Menus for nodes and edges.
+    -   Drag-and-drop edge creation (Edgehandles).
+    -   Undo/Redo support.
 - [x] **Serving**: FastAPI backend with static file serving.
 
 ### Future Work
@@ -77,4 +81,3 @@ This project is built with Python 3.10+ and uses [uv](https://github.com/astral-
     -   *Lateral Movement Graph*: Specialized layout for attack paths.
     -   *Timeline Graph*: Temporal visualization of events.
 - [ ] **Theming**: UI-configurable color schemes.
-- [ ] **Frontend**: Cytoscape.js extensions for improved layout and interaction.
