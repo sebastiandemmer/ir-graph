@@ -110,9 +110,15 @@ class Graph(object):
         
         # Remove node
         self.nodes = [n for n in self.nodes if n.name != node_name]
+        
+        # Clear parent references in remaining nodes
+        for node in self.nodes:
+            if node.parent == node_name:
+                node.parent = None
+
         return True
 
-    def update_node(self, old_name: str, new_name: str, new_category: str = None) -> bool:
+    def update_node(self, old_name: str, new_name: str, new_category: str = None, new_parent: str = None) -> bool:
         """Updates a node's name and optional category."""
         node = self.get_node_by_name(old_name)
         if not node:
@@ -125,6 +131,20 @@ class Graph(object):
             
         if new_category is not None:
             node.category = new_category
+        
+        # We allow setting parent to None (ungrouping) by explicitly passing something if needed,
+        # but here the arg default is None which implies "no change" typically in this pattern.
+        # However, to allow clearing, we might need a sentinel or check if argument was provided.
+        # For simplicity in this project's style so far:
+        # If new_parent is passed (not None), we update it.
+        # To clear it, we might need an explicit empty string or specific None handling if we change the signature.
+        # Given the current pattern:
+        if new_parent is not None:
+            # If empty string, treat as removing parent
+            if new_parent == "":
+                node.parent = None
+            else:
+                node.parent = new_parent
             
         return True
 

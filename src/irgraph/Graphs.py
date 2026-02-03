@@ -42,7 +42,13 @@ class Graphs(object):
     def graph_from_dict(self, graph_object: dict):
             graph = Graph(name=graph_object.get("name"))
             for node in graph_object.get("nodes", []):
-                new_node = Node(name=node.get("name"), category=node.get("category", None), position_x=node.get("position_x", None), position_y=node.get("position_y", None))
+                new_node = Node(
+                    name=node.get("name"), 
+                    category=node.get("category", None), 
+                    position_x=node.get("position_x", None), 
+                    position_y=node.get("position_y", None),
+                    parent=node.get("parent", None)
+                )
                 graph.add_node(new_node)
             for edge in graph_object.get("edges", []):
                 graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"))
