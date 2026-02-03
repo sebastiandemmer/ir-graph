@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     // A global variable to hold the Cytoscape instance
     let cy;
+    // Undo-Redo instance
+    let ur;
     // The ID of the currently selected graph. Initialized to null, will be set dynamically.
     let currentGraphId = null;
     // A global variable to hold the UI configuration
@@ -11,6 +13,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentGraphIdSpan = document.getElementById('current-graph-id');
     const mainGraphTitle = document.getElementById('main-graph-title');
     const graphCanvas = document.getElementById('cy');
+
+    // --- Global Event Listeners (Attached Once) ---
+
+    document.getElementById('btn-undo').addEventListener('click', () => {
+        if (ur) {
+            ur.undo();
+            showToast("Undo", "info");
+        }
+    });
+
+    document.getElementById('btn-redo').addEventListener('click', () => {
+        if (ur) {
+            ur.redo();
+            showToast("Redo", "info");
+        }
+    });
 
     // Prevent default browser context menu on the graph canvas
     // Use capture phase on document to be sure we catch it
@@ -48,6 +66,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Store selected edge for modification/deletion
     let selectedEdge = null;
+
+    // Global keyboard handler
+    function handleGlobalKeyDown(e) {
+        if (!ur) return;
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'z') {
+                e.preventDefault(); // Prevent browser undo
+                ur.undo();
+                showToast("Undo", "info");
+            } else if (e.key === 'y') {
+                e.preventDefault(); // Prevent browser redo
+                ur.redo();
+                showToast("Redo", "info");
+            }
+        }
+    }
+    document.addEventListener('keydown', handleGlobalKeyDown);
 
     /**
      * Shows a toast notification.
@@ -161,7 +196,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     data: {
                         id: node.name,
                         name: node.name,
-                        category: node.category
+                        category: node.category,
+                        parent: node.parent
                     }
                 };
 
@@ -226,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // --- Extension Initialization ---
 
             // 1. Undo-Redo
-            const ur = cy.undoRedo();
+            ur = cy.undoRedo();
 
             // 2. Edgehandles
             const eh = cy.edgehandles({
@@ -278,6 +314,33 @@ document.addEventListener('DOMContentLoaded', function () {
                             // Start manual connection mode
                             startConnectionMode(ele);
                         }
+                    },
+                    {
+                        content: '<span class="material-symbols-rounded">folder_open</span>',
+                        select: function (ele) {
+                            setTimeout(() => {
+                                const selected = ele.cy().$('node:selected');
+                                // If element itself is not selected but was clicked, include it?
+                                // Cytoscape logic: usually click selects. But context menu might not.
+                                // Let's rely on selected set if it contains at least 1. 
+                                // If 0 selected, just use ele.
+                                const nodesToGroup = selected.length > 0 ? selected : ele;
+                                handleCreateGroup(nodesToGroup);
+                            }, 100);
+                        }
+                    },
+                    {
+                        content: '<span class="material-symbols-rounded">folder_off</span>',
+                        select: function (ele) {
+                            if (!ele.isParent()) {
+                                showToast("Not a group", "info");
+                                return;
+                            }
+                            setTimeout(() => {
+                                handleUngroup(ele);
+                            }, 100);
+                        },
+                        disabled: (ele) => !ele.isParent()
                     }
                 ],
                 fillColor: 'rgba(255, 255, 255, 0.9)',
@@ -351,6 +414,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            // Listen for Undo/Redo events to persist state (positions)
+            // cytoscape-undo-redo emits 'afterUndo' and 'afterRedo' on the cy instance
+            cy.on('afterUndo afterRedo', () => {
+                // Save positions of ALL nodes to ensure sync
+                // We use a small timeout to ensure the DOM/model is fully settled if needed
+                setTimeout(() => {
+                    const allNodes = cy.nodes().toArray();
+                    saveNodePositions(allNodes);
+                }, 100);
+            });
+
         } catch (error) {
             console.error('Failed to fetch or process graph data:', error);
             graphCanvas.innerHTML = `
@@ -412,6 +486,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     'border-width': 2,
                     'border-color': '#4f46e5', // indigo-600
                     'background-color': '#eff6ff' // blue-50
+                }
+            },
+            {
+                selector: ':parent',
+                style: {
+                    'background-color': '#f0f9ff', // light blue
+                    // 'background-opacity': 0.3,
+                    'border-color': '#bae6fd',
+                    'border-width': 2,
+                    'label': 'data(name)',
+                    'text-valign': 'top',
+                    'text-halign': 'center',
+                    'text-margin-y': -5,
+                    'padding': '20px',
+                    'font-weight': 'bold',
+                    'font-size': '14px',
+                    'color': '#0284c7'
                 }
             },
             {
@@ -500,11 +591,26 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Gathers all node positions and sends them to the API.
      */
-    async function saveNodePositions() {
-        if (!cy || movedNodes.size === 0 || currentGraphId === null) return;
+    /**
+     * Gathers node positions and sends them to the API.
+     * @param {Array} nodes - Optional array of nodes to save. If not provided, saves 'movedNodes'.
+     */
+    async function saveNodePositions(nodes = null) {
+        if (!cy || currentGraphId === null) return;
+
+        let nodesToProcess = [];
+        if (nodes && Array.isArray(nodes) && nodes.length > 0) {
+            nodesToProcess = nodes;
+        } else {
+            if (movedNodes.size === 0) return;
+            nodesToProcess = Array.from(movedNodes);
+        }
 
         const positions = [];
-        for (const node of movedNodes) {
+        for (const node of nodesToProcess) {
+            // Guard against deleted nodes that might still be in the set/list
+            if (typeof node.position !== 'function') continue;
+
             const pos = node.position();
             positions.push({
                 name: node.id(),
@@ -512,6 +618,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 position_y: Math.floor(pos.y)
             });
         }
+
+        if (positions.length === 0) return;
 
         try {
             const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/nodes`, {
@@ -521,10 +629,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             if (!response.ok) throw new Error('Failed to save node positions');
 
-            console.log(`Node positions saved for: ${positions.map(p => p.name).join(', ')}`);
+            console.log(`Node positions saved for ${positions.length} nodes`);
             showToast('Node positions saved!', 'success');
 
-            movedNodes.clear();
+            // If we processed the movedNodes set (default), clear it.
+            // If explicit list, we typically don't need to clear movedNodes, 
+            // but effectively those nodes are 'saved', so valid to remove them from set too.
+            if (!nodes) {
+                movedNodes.clear();
+            } else {
+                // Remove processed nodes from movedNodes set to avoid double save
+                nodesToProcess.forEach(n => movedNodes.delete(n));
+            }
         } catch (error) {
             console.error(error);
             showToast('Error saving node positions.', 'error');
@@ -579,15 +695,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function updateNode(oldName, newName, newCategory) {
+    async function updateNode(oldName, newName, newCategory, newParent = undefined) {
         try {
+            const payload = {
+                name: newName,
+                category: newCategory
+            };
+            if (newParent !== undefined) {
+                payload.parent = newParent;
+            }
+
             const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/nodes/${oldName}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: newName,
-                    category: newCategory
-                })
+                body: JSON.stringify(payload)
             });
             if (!response.ok) throw new Error('Failed to update node');
             showToast(`Node updated!`, 'success');
@@ -595,6 +716,53 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error(error);
             showToast('Error updating node. Name might already exist.', 'error');
+        }
+    }
+
+    async function handleCreateGroup(selectedNodes) {
+        const groupName = prompt("Enter name for the new group:");
+        if (!groupName) return;
+
+        try {
+            // 1. Create the group node
+            // Check if it exists first? valid since addNewNode might throw/toast error
+            // We'll try to add it. Category 'Group' is suggested.
+            await addNewNode(groupName, 'Group');
+
+            // 2. Move nodes into group
+            // We do this sequentially for now.
+            for (const node of selectedNodes) {
+                await updateNode(node.id(), node.id(), node.data('category'), groupName);
+            }
+
+            showToast(`Group "${groupName}" created with ${selectedNodes.length} nodes`, 'success');
+            // initializeGraph is called by updateNode, but multiple calls might cause flicker.
+            // Ideally we'd have a bulk update endpoint, but for now this works.
+        } catch (error) {
+            console.error('Group creation failed:', error);
+            showToast('Failed to create group', 'error');
+        }
+    }
+
+    async function handleUngroup(groupNode) {
+        if (!groupNode.isParent()) return;
+
+        const children = groupNode.children();
+        const parentOfGroup = groupNode.parent();
+        const newParentId = parentOfGroup.length > 0 ? parentOfGroup.id() : "";
+        // If nested, move children to grandparent. If top-level, move to root ("").
+
+        try {
+            // 1. Move children out
+            for (const child of children) {
+                await updateNode(child.id(), child.id(), child.data('category'), newParentId);
+            }
+            // 2. Delete the group node
+            await deleteNode(groupNode.id());
+            showToast('Group dissolved', 'success');
+        } catch (error) {
+            console.error('Ungroup failed:', error);
+            showToast('Failed to ungroup', 'error');
         }
     }
 

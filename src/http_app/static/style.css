@@ -135,7 +135,7 @@ body {
     font-size: 0.75rem;
     padding: 2px 6px;
     border-radius: 4px;
-    font-mono: monospace;
+    font-family: monospace;
 }
 
 /* Forms */
@@ -256,9 +256,36 @@ select:focus {
     margin: 0;
 }
 
+.graph-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.button-group {
+    display: flex;
+    gap: 5px;
+}
+
+.button-group .btn {
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.button-group .btn .material-symbols-rounded {
+    font-size: 20px;
+    /* Slightly smaller icon to fit comfortably */
+}
+
 .select-wrapper {
     position: relative;
-    min-width: 200px;
+    min-width: 150px;
+    /* Reduce min-width to accommodate buttons */
 }
 
 .graph-canvas {
