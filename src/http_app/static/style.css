@@ -152,7 +152,8 @@ label {
 }
 
 input[type="text"],
-select {
+select,
+textarea {
     width: 100%;
     padding: 0.625rem;
     border: 1px solid var(--border);
@@ -163,8 +164,14 @@ select {
     transition: all 0.2s;
 }
 
+textarea {
+    resize: none;
+    min-height: 80px;
+}
+
 input[type="text"]:focus,
-select:focus {
+select:focus,
+textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);

@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleNodeBorder = document.getElementById('toggle-node-border');
     const toggleTextBelow = document.getElementById('toggle-text-below');
     const toggleEdgeDesc = document.getElementById('toggle-edge-desc');
+    const edgeModeSelect = document.getElementById('edge-mode-select');
 
     // A timer for debouncing the save operation
     let saveDebounceTimer;
@@ -197,7 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         id: node.name,
                         name: node.name,
                         category: node.category,
-                        parent: node.parent
+                        parent: node.parent,
+                        description: node.description
                     }
                 };
 
@@ -216,7 +218,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         id: `${edge.start.name}->${edge.end.name}_${index}`,
                         source: edge.start.name,
                         target: edge.end.name,
-                        description: edge.description
+                        description: edge.description,
+                        style: edge.style
                     }
                 });
             });
@@ -377,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         select: function (ele) {
                             const edgeData = ele.data();
                             setTimeout(() => {
-                                openEditEdgeModal(edgeData.source, edgeData.target, edgeData.description);
+                                openEditEdgeModal(edgeData.source, edgeData.target, edgeData.description, edgeData.style);
                             }, 100);
                         }
                     }
@@ -452,18 +455,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const showBorder = toggleNodeBorder.checked;
         const textBelow = toggleTextBelow.checked;
         const showEdgeDesc = toggleEdgeDesc.checked;
+        const edgeMode = edgeModeSelect ? edgeModeSelect.value : 'bezier';
 
         // Base styles
         const styles = [
             {
                 selector: 'node',
                 style: {
-                    'label': 'data(name)',
+                    'label': function (ele) {
+                        const name = ele.data('name');
+                        const description = ele.data('description');
+                        return description ? `${name}\n${description}` : name;
+                    },
                     'color': '#1e293b', // slate-800
                     'shape': 'round-rectangle',
-                    'text-valign': textBelow ? 'bottom' : 'center',
+                    'text-valign': function (ele) {
+                        return ele.data('category') === 'Default' ? 'center' : 'bottom';
+                    },
                     'text-halign': 'center',
-                    'text-margin-y': textBelow ? '8px' : '0px',
+                    'text-margin-y': function (ele) {
+                        return ele.data('category') === 'Default' ? '0px' : '8px';
+                    },
                     'font-family': 'Inter, system-ui, sans-serif',
                     'font-weight': '600',
                     'font-size': '12px',
@@ -477,7 +489,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     'shadow-color': 'rgba(0,0,0,0.1)',
                     'shadow-offset-y': 2,
                     'text-wrap': 'wrap',
-                    'text-max-width': '100px'
+                    'text-max-width': '150px',
+                    'text-justification': 'center',
+                    'white-space': 'pre-wrap' // Helper for specific environments, though text-wrap handled by cy
                 }
             },
             {
@@ -510,9 +524,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 style: {
                     'width': 2,
                     'line-color': '#cbd5e1', // slate-300
+                    'line-style': function (ele) {
+                        const s = ele.data('style');
+                        return (s === 'dotted') ? 'dotted' : 'solid';
+                    },
                     'target-arrow-color': '#cbd5e1',
                     'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier',
+                    'curve-style': edgeMode,
                     'control-point-step-size': 40,
                     'arrow-scale': 1.2,
                     'label': showEdgeDesc ? 'data(description)' : '',
@@ -695,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function updateNode(oldName, newName, newCategory, newParent = undefined) {
+    async function updateNode(oldName, newName, newCategory, newParent = undefined, newDescription = undefined) {
         try {
             const payload = {
                 name: newName,
@@ -703,6 +721,9 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             if (newParent !== undefined) {
                 payload.parent = newParent;
+            }
+            if (newDescription !== undefined) {
+                payload.description = newDescription;
             }
 
             const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/nodes/${oldName}`, {
@@ -766,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function updateEdgeDescription(source, target, description) {
+    async function updateEdgeAttributes(source, target, description, style) {
         try {
             const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/edges`, {
                 method: 'PATCH',
@@ -774,12 +795,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({
                     start_node: source,
                     end_node: target,
-                    description: description
+                    description: description,
+                    style: style
                 })
             });
             if (!response.ok) throw new Error('Failed to update edge');
-            showToast('Edge description updated!', 'success');
-            initializeGraph(currentGraphId);
+            showToast('Edge updated!', 'success');
+
+            // Update local cytoscape instance directly to reflect changes
+            // Find edge between source and target
+            const edge = cy.edges().filter(e => e.data('source') === source && e.data('target') === target);
+            if (edge.length > 0) {
+                if (description !== undefined) edge.data('description', description);
+                if (style !== undefined) edge.data('style', style);
+            }
+
         } catch (error) {
             console.error(error);
             showToast('Error updating edge.', 'error');
@@ -791,19 +821,52 @@ document.addEventListener('DOMContentLoaded', function () {
             showToast('No graph selected.', 'error');
             return;
         }
+
+        // Calculate position
+        let position_x = 0;
+        let position_y = 0;
+
+        if (cy) {
+            const pan = cy.pan();
+            const zoom = cy.zoom();
+            const w = cy.width();
+            const h = cy.height();
+
+            // Center of the viewport in model coordinates
+            const centerX = (w / 2 - pan.x) / zoom;
+            const centerY = (h / 2 - pan.y) / zoom;
+
+            // Add random offset (-50 to +50)
+            position_x = Math.round(centerX + (Math.random() * 100 - 50));
+            position_y = Math.round(centerY + (Math.random() * 100 - 50));
+        }
+
         try {
             const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/nodes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: nodeName,
-                    category: nodeCategory
+                    category: nodeCategory,
+                    position_x: position_x,
+                    position_y: position_y
                 })
             });
             if (!response.ok) throw new Error('Failed to add node');
 
             showToast(`Node "${nodeName}" added!`, 'success');
-            initializeGraph(currentGraphId);
+            await initializeGraph(currentGraphId);
+
+            // Auto-select the new node
+            if (cy) {
+                const newNode = cy.$id(nodeName);
+                if (newNode.length > 0) {
+                    newNode.select();
+                    // Optional: Center on the new node if it was somehow off-screen, 
+                    // though we calculated it to be in center.
+                }
+            }
+
         } catch (error) {
             console.error(error);
             showToast('Error adding node. Already exists?', 'error');
@@ -945,9 +1008,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const inputName = document.getElementById('edit-node-name');
         const inputOriginalName = document.getElementById('edit-node-original-name');
         const selectCategory = document.getElementById('edit-node-category');
+        const inputDescription = document.getElementById('edit-node-description');
 
         inputName.value = nodeName;
         inputOriginalName.value = nodeName;
+
+        // Fetch current description from cytoscape node
+        const node = cy.$id(nodeName);
+        if (node.length > 0) {
+            inputDescription.value = node.data('description') || '';
+        } else {
+            inputDescription.value = '';
+        }
 
         // Populate categories
         selectCategory.innerHTML = '';
@@ -982,10 +1054,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const oldName = document.getElementById('edit-node-original-name').value;
         const newName = document.getElementById('edit-node-name').value;
         const newCategory = document.getElementById('edit-node-category').value;
+        const newDescription = document.getElementById('edit-node-description').value;
 
-        if (newName && (newName !== oldName || newCategory)) { // If changed
-            await updateNode(oldName, newName, newCategory);
-        }
+        // Always update if submit is clicked to ensure description is saved even if name/category unchanged
+        // But to be efficient, we check. 
+        // Actually, checking previous description is hard without storing it. 
+        // Let's just always update for now.
+        await updateNode(oldName, newName, newCategory, undefined, newDescription);
+
         closeEditNodeModal();
     }
 
@@ -1006,11 +1082,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Edge Edit Modal
-    function openEditEdgeModal(source, target, description) {
+    function openEditEdgeModal(source, target, description, style) {
         const modal = document.getElementById('edit-edge-modal');
         document.getElementById('edit-edge-source').value = source;
         document.getElementById('edit-edge-target').value = target;
         document.getElementById('edit-edge-description').value = description || '';
+        document.getElementById('edit-edge-style').value = style || 'solid';
         modal.style.display = 'flex';
     }
 
@@ -1024,8 +1101,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const source = document.getElementById('edit-edge-source').value;
         const target = document.getElementById('edit-edge-target').value;
         const description = document.getElementById('edit-edge-description').value;
+        const style = document.getElementById('edit-edge-style').value;
 
-        await updateEdgeDescription(source, target, description);
+        await updateEdgeAttributes(source, target, description, style);
         closeEditEdgeModal();
     }
 
@@ -1078,7 +1156,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const link = document.createElement('a');
         link.href = 'data:image/png;base64,' + png64;
-        link.download = `graph-${currentGraphId}.png`;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const graphName = mainGraphTitle.textContent.trim() || `graph-${currentGraphId}`;
+        link.download = `${graphName}_${timestamp}.png`;
 
         document.body.appendChild(link);
         link.click();
@@ -1145,6 +1225,14 @@ document.addEventListener('DOMContentLoaded', function () {
             cy.style(getGraphStyles());
         }
     });
+
+    if (edgeModeSelect) {
+        edgeModeSelect.addEventListener('change', () => {
+            if (cy) {
+                cy.style(getGraphStyles());
+            }
+        });
+    }
 
     document.getElementById('graph-selector').addEventListener('change', (event) => {
         currentGraphId = parseInt(event.target.value, 10);

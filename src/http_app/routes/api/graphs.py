@@ -18,6 +18,7 @@ class EdgeModel(BaseModel):
     start_node: str
     end_node: str
     description: str | None = None
+    style: str = "solid"
 
 class NodeModel(BaseModel):
     name: str
@@ -25,6 +26,7 @@ class NodeModel(BaseModel):
     position_y: int | None = None
     category: str = "Default"
     parent: str | None = None
+    description: str | None = None
 
 class NodesModel(BaseModel):
     nodes: list[NodeModel]
@@ -55,7 +57,14 @@ async def get_edges(graph_id: int):
 @router.post("/graphs/{graph_id}/nodes")
 async def create_node(graph_id: int, node_model: NodeModel):
     graph = graphs.get_graph_by_id(graph_id)
-    new_node = Node(name=node_model.name, category=node_model.category, parent=node_model.parent)
+    new_node = Node(
+        name=node_model.name, 
+        category=node_model.category, 
+        parent=node_model.parent,
+        position_x=node_model.position_x,
+        position_y=node_model.position_y,
+        description=node_model.description
+    )
     graph.add_node(new_node)
     graphs.save_to_json()
     return graph
@@ -70,6 +79,8 @@ async def update_all_nodes(graph_id: int, nodes_model: NodesModel):
                 node.position_x = node_model.position_x
             if node_model.position_y is not None:
                 node.position_y = node_model.position_y
+            if node_model.description is not None:
+                node.description = node_model.description
     graphs.save_to_json()
     return {"message": "Nodes updated"}
 
@@ -85,6 +96,13 @@ async def delete_node(graph_id: int, node_name: str):
 async def update_node(graph_id: int, node_name: str, node_model: NodeModel):
     graph = graphs.get_graph_by_id(graph_id)
     # Use update_node instead of rename_node
+    # Note: we might need to update the underlying graph.update_node signature if we want to pass description there too, 
+    # but for now we can set it directly if update_node doesn't support it, or assumes we just rename.
+    # Let's check if we can just set the description directly after update.
+    node = graph.get_node_by_name(node_name)
+    if node:
+        node.description = node_model.description
+    
     if graph and graph.update_node(node_name, node_model.name, node_model.category, node_model.parent):
         graphs.save_to_json()
         return {"message": "Node updated"}
@@ -102,7 +120,7 @@ async def create_edge(graph_id: int, edge_model: EdgeModel):
     if start_node is None or end_node is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Node names incorrect")
     else:
-        new_edge = Edge(start=start_node, end=end_node, description=edge_model.description)
+        new_edge = Edge(start=start_node, end=end_node, description=edge_model.description, style=edge_model.style)
         graph.add_edge(new_edge)
         graphs.save_to_json()
     return graph
@@ -132,7 +150,7 @@ async def delete_edge(graph_id: int, start_node: str, end_node: str):
 @router.patch("/graphs/{graph_id}/edges")
 async def update_edge(graph_id: int, edge_model: EdgeModel):
     graph = graphs.get_graph_by_id(graph_id)
-    if graph and graph.update_edge(edge_model.start_node, edge_model.end_node, edge_model.description):
+    if graph and graph.update_edge(edge_model.start_node, edge_model.end_node, edge_model.description, edge_model.style):
         graphs.save_to_json()
         return {"message": "Edge updated"}
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Edge not found")

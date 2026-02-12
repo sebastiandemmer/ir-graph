@@ -79,7 +79,7 @@ class Graph(object):
         else:
             raise TypeError("Edges to add must be in a list")
 
-    def add_edge_by_node_names(self, from_name: str, to_name: str, directed: bool = True, description: str = None) -> Edge | None:
+    def add_edge_by_node_names(self, from_name: str, to_name: str, directed: bool = True, description: str = None, style: str = "solid") -> Edge | None:
         assert isinstance(from_name, str), TypeError(f"Got {from_name} instead of <str>")
         assert isinstance(to_name, str), TypeError(f"Got {to_name} instead of <str>")
         
@@ -88,7 +88,7 @@ class Graph(object):
         if start_node is None or end_node is None:
             return "Node names incorrect"
         else:
-            new_edge = Edge(start=start_node, end=end_node, directed=directed, description=description)
+            new_edge = Edge(start=start_node, end=end_node, directed=directed, description=description, style=style)
             self.add_edge(new_edge)
             return new_edge
 
@@ -148,10 +148,12 @@ class Graph(object):
             
         return True
 
-    def update_edge(self, start_node: str, end_node: str, description: str) -> bool:
+    def update_edge(self, start_node: str, end_node: str, description: str, style: str = None) -> bool:
         for edge in self.edges:
             if edge.start.name == start_node and edge.end.name == end_node:
                 edge.description = description
+                if style is not None:
+                    edge.style = style
                 return True
         return False
 

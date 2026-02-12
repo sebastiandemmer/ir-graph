@@ -51,7 +51,7 @@ class Graphs(object):
                 )
                 graph.add_node(new_node)
             for edge in graph_object.get("edges", []):
-                graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"))
+                graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"), style=edge.get("style", "solid"))
             return graph
 
     def delete_graph(self, graph_id: int) -> bool:
