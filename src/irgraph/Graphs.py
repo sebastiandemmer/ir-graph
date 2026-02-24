@@ -67,6 +67,16 @@ class Graphs(object):
             return True
         return False
 
+    def duplicate_graph(self, graph_id: int) -> int | None:
+        graph = self.get_graph_by_id(graph_id)
+        if graph:
+            graph_dict_copy = graph.toJSON()
+            graph_dict_copy["name"] = f"{graph.name} copy"
+            new_graph = self.graph_from_dict(graph_dict_copy)
+            self.graphs.append(new_graph)
+            return len(self.graphs) - 1
+        return None
+
     def save_to_json(self) -> None:
         logging.info("Writing graph to file {filepath}")
         with open(self.json_file_path, 'w') as json_file:

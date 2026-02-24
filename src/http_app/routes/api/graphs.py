@@ -139,6 +139,14 @@ async def update_graph(graph_id: int, graph_model: GraphModel):
         return {"message": "Graph updated"}
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
 
+@router.post("/graphs/{graph_id}/duplicate")
+async def duplicate_graph(graph_id: int):
+    new_id = graphs.duplicate_graph(graph_id)
+    if new_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
+    graphs.save_to_json()
+    return {"new_graph_id": new_id, "message": "Graph duplicated"}
+
 @router.delete("/graphs/{graph_id}/edges")
 async def delete_edge(graph_id: int, start_node: str, end_node: str):
     graph = graphs.get_graph_by_id(graph_id)

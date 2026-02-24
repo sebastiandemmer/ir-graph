@@ -16,3 +16,4 @@ build/
 graphs.json
 run_REMOVE_ME.py
 skills/
+.agent/

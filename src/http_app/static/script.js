@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // A global variable to hold the UI configuration
     let uiConfig = null;
     let connectionModeSource = null; // Track manual connection state
-    const API_BASE_URL = 'http://127.0.0.1:8000/api';
+    const API_BASE_URL = '/api';
 
     const currentGraphIdSpan = document.getElementById('current-graph-id');
     const mainGraphTitle = document.getElementById('main-graph-title');
@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // UI Toggles
     const toggleNodeBorder = document.getElementById('toggle-node-border');
-    const toggleTextBelow = document.getElementById('toggle-text-below');
     const toggleEdgeDesc = document.getElementById('toggle-edge-desc');
     const edgeModeSelect = document.getElementById('edge-mode-select');
 
@@ -347,10 +346,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 ],
                 fillColor: 'rgba(255, 255, 255, 0.9)',
-                activeFillColor: 'rgba(79, 70, 229, 0.1)',
-                itemColor: '#1e293b',
+                activeFillColor: 'rgba(132, 94, 194, 0.1)',
+                itemColor: '#4b4453',
                 itemTextShadowColor: 'transparent',
-                activeItemColor: '#4f46e5',
+                activeItemColor: '#845ec2',
                 indicatorSize: 24,
                 separatorWidth: 3,
                 spotlightPadding: 4,
@@ -386,9 +385,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 ],
                 fillColor: 'rgba(255, 255, 255, 0.9)',
-                activeFillColor: 'rgba(239, 68, 68, 0.1)',
-                itemColor: '#1e293b',
-                activeItemColor: '#ef4444',
+                activeFillColor: 'rgba(255, 128, 102, 0.1)',
+                itemColor: '#4b4453',
+                activeItemColor: '#ff8066',
                 openMenuEvents: 'cxttapstart taphold',
             });
 
@@ -453,7 +452,6 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function getGraphStyles() {
         const showBorder = toggleNodeBorder.checked;
-        const textBelow = toggleTextBelow.checked;
         const showEdgeDesc = toggleEdgeDesc.checked;
         const edgeMode = edgeModeSelect ? edgeModeSelect.value : 'bezier';
 
@@ -467,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const description = ele.data('description');
                         return description ? `${name}\n${description}` : name;
                     },
-                    'color': '#1e293b', // slate-800
+                    'color': '#4b4453',
                     'shape': 'round-rectangle',
                     'text-valign': function (ele) {
                         return ele.data('category') === 'Default' ? 'center' : 'bottom';
@@ -481,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     'font-size': '12px',
                     'background-color': '#ffffff',
                     'border-width': showBorder ? 2 : 0, // Toggle border
-                    'border-color': '#94a3b8', // slate-400
+                    'border-color': '#b0a8b9',
                     'width': 'label',
                     'height': 'label',
                     'padding': '12px',
@@ -498,16 +496,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 selector: 'node:selected',
                 style: {
                     'border-width': 2,
-                    'border-color': '#4f46e5', // indigo-600
-                    'background-color': '#eff6ff' // blue-50
+                    'border-color': '#845ec2',
+                    'background-color': '#f9f8fa'
                 }
             },
             {
                 selector: ':parent',
                 style: {
-                    'background-color': '#f0f9ff', // light blue
+                    'background-color': '#f9f8fa',
                     // 'background-opacity': 0.3,
-                    'border-color': '#bae6fd',
+                    'border-color': '#b0a8b9',
                     'border-width': 2,
                     'label': 'data(name)',
                     'text-valign': 'top',
@@ -516,19 +514,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     'padding': '20px',
                     'font-weight': 'bold',
                     'font-size': '14px',
-                    'color': '#0284c7'
+                    'color': '#4b4453'
                 }
             },
             {
                 selector: 'edge',
                 style: {
                     'width': 2,
-                    'line-color': '#cbd5e1', // slate-300
+                    'line-color': '#b0a8b9',
                     'line-style': function (ele) {
                         const s = ele.data('style');
                         return (s === 'dotted') ? 'dotted' : 'solid';
                     },
-                    'target-arrow-color': '#cbd5e1',
+                    'target-arrow-color': '#b0a8b9',
                     'target-arrow-shape': 'triangle',
                     'curve-style': edgeMode,
                     'control-point-step-size': 40,
@@ -537,14 +535,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     'text-rotation': 'autorotate',
                     'text-margin-y': -10,
                     'font-size': '10px',
-                    'color': '#64748b'
+                    'color': '#4b4453'
                 }
             },
             {
                 selector: 'edge:selected',
                 style: {
-                    'line-color': '#4f46e5',
-                    'target-arrow-color': '#4f46e5'
+                    'line-color': '#845ec2',
+                    'target-arrow-color': '#845ec2'
                 }
             }
         ];
@@ -571,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Fetches the list of graphs and populates the graph selector dropdown.
      */
-    async function fetchAndPopulateGraphSelector() {
+    async function fetchAndPopulateGraphSelector(targetIndex = 0) {
         const graphSelector = document.getElementById('graph-selector');
         graphSelector.innerHTML = '';
 
@@ -589,10 +587,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     option.textContent = graph.name || `Graph ${index}`;
                     graphSelector.appendChild(option);
                 });
-                // Set currentGraphId to the first graph's ID (index 0)
-                currentGraphId = 0;
+
+                let targetId = (targetIndex !== undefined && targetIndex !== null && targetIndex < graphsList.length) ? targetIndex : 0;
+                currentGraphId = targetId;
                 graphSelector.value = currentGraphId;
-                mainGraphTitle.textContent = graphsList[0].name || `Graph 0`;
+                mainGraphTitle.textContent = graphsList[targetId].name || `Graph ${targetId}`;
                 initializeGraph(currentGraphId);
             } else {
                 currentGraphId = null;
@@ -1107,6 +1106,47 @@ document.addEventListener('DOMContentLoaded', function () {
         closeEditEdgeModal();
     }
 
+    // Rename Graph Modal
+    function openRenameGraphModal() {
+        if (currentGraphId === null) return;
+        const modal = document.getElementById('rename-graph-modal');
+        const inputName = document.getElementById('rename-graph-name');
+        inputName.value = mainGraphTitle.textContent.trim();
+        modal.style.display = 'flex';
+    }
+
+    function closeRenameGraphModal() {
+        const modal = document.getElementById('rename-graph-modal');
+        modal.style.display = 'none';
+    }
+
+    async function handleRenameGraphSubmit(event) {
+        event.preventDefault();
+        if (currentGraphId === null) return;
+
+        const currentName = mainGraphTitle.textContent.trim();
+        const newName = document.getElementById('rename-graph-name').value;
+        if (!newName || newName === currentName) {
+            closeRenameGraphModal();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+            if (!response.ok) throw new Error('Failed to rename graph');
+            showToast('Graph renamed!', 'success');
+            await fetchAndPopulateGraphSelector(currentGraphId);
+            closeRenameGraphModal();
+        } catch (error) {
+            console.error(error);
+            showToast('Error renaming graph.', 'error');
+        }
+    }
+
     async function handleCreateGraph(event) {
         event.preventDefault();
         const graphName = document.getElementById('graph-name').value;
@@ -1188,9 +1228,30 @@ document.addEventListener('DOMContentLoaded', function () {
         closeConfirmModal();
     });
 
+    document.getElementById('rename-graph-form').addEventListener('submit', handleRenameGraphSubmit);
+    document.getElementById('cancel-rename-graph').addEventListener('click', closeRenameGraphModal);
+
     document.getElementById('create-graph-form').addEventListener('submit', handleCreateGraph);
     document.getElementById('save-graphs-form').addEventListener('submit', handleSaveGraphs);
     document.getElementById('export-graph-png-form').addEventListener('submit', handleExportPng);
+    document.getElementById('rename-graph-btn').addEventListener('click', openRenameGraphModal);
+
+    document.getElementById('duplicate-graph-btn').addEventListener('click', async () => {
+        if (currentGraphId === null) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/duplicate`, {
+                method: 'POST'
+            });
+            if (!response.ok) throw new Error('Failed to duplicate graph');
+            showToast('Graph duplicated!', 'success');
+            const data = await response.json();
+            await fetchAndPopulateGraphSelector(data.new_graph_id);
+        } catch (error) {
+            console.error(error);
+            showToast('Error duplicating graph.', 'error');
+        }
+    });
+
     document.getElementById('delete-graph-btn').addEventListener('click', () => {
         if (currentGraphId === null) return;
         openConfirmModal('Are you sure you want to delete this ENTIRE graph? This cannot be undone.', async () => {
@@ -1211,11 +1272,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // View Option Toggles
     toggleNodeBorder.addEventListener('change', () => {
-        if (cy) {
-            cy.style(getGraphStyles());
-        }
-    });
-    toggleTextBelow.addEventListener('change', () => {
         if (cy) {
             cy.style(getGraphStyles());
         }
