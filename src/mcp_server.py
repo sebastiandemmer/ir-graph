@@ -6,7 +6,7 @@ import sys
 import json
 
 # Initialize FastMCP instance named "IR-Graph"
-mcp = FastMCP("IR-Graph")
+mcp = FastMCP("IR-Graph", dependencies=["httpx"])
 
 # Global client placeholder
 client = None
@@ -30,6 +30,44 @@ async def get_graph_resource(graph_id: int) -> str:
     if not graph:
         return f"Error: Graph {graph_id} not found."
     return json.dumps(graph, indent=2)
+
+@mcp.tool()
+async def create_graph(name: str) -> str:
+    """Creates a new graph. The name will automatically include '(agent)'."""
+    c = get_client()
+    try:
+        graph = await c.create_graph(name)
+        return f"Graph created successfully: {json.dumps(graph, indent=2)}"
+    except RuntimeError as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+async def add_node(graph_id: int, name: str, category: str = "Default", description: str = None) -> str:
+    """Adds a new node to an agent-owned graph."""
+    c = get_client()
+    try:
+        if not await c.is_agent_owned(graph_id):
+            return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
+        
+        node_data = {"name": name, "category": category, "description": description}
+        await c.add_node(graph_id, node_data)
+        return f"Node '{name}' added successfully to graph {graph_id}."
+    except RuntimeError as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+async def add_edge(graph_id: int, source_node: str, target_node: str, description: str = None) -> str:
+    """Adds a new edge between two nodes in an agent-owned graph."""
+    c = get_client()
+    try:
+        if not await c.is_agent_owned(graph_id):
+            return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
+        
+        edge_data = {"start_node": source_node, "end_node": target_node, "description": description}
+        await c.add_edge(graph_id, edge_data)
+        return f"Edge from '{source_node}' to '{target_node}' added successfully to graph {graph_id}."
+    except RuntimeError as e:
+        return f"Error: {str(e)}"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IR-Graph MCP Server")
