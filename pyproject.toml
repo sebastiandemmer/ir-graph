@@ -28,6 +28,7 @@ dependencies = [
     "SQLAlchemy[asyncio,mypy]<3.0.0,>=2.0.0",
     "sqlalchemy-bind-manager",
     "structlog<25.4.1,>=25.4.0",
+    "mcp>=1.26.0",
 ]
 
 [dependency-groups]
