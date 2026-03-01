@@ -69,6 +69,37 @@ async def add_edge(graph_id: int, source_node: str, target_node: str, descriptio
     except RuntimeError as e:
         return f"Error: {str(e)}"
 
+@mcp.tool()
+async def update_node(graph_id: int, node_name: str, new_name: str = None, category: str = "Default", description: str = None) -> str:
+    """Updates an existing node in an agent-owned graph."""
+    c = get_client()
+    try:
+        if not await c.is_agent_owned(graph_id):
+            return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
+        
+        node_data = {
+            "name": new_name if new_name else node_name,
+            "category": category,
+            "description": description
+        }
+        await c.update_node(graph_id, node_name, node_data)
+        return f"Node '{node_name}' updated successfully in graph {graph_id}."
+    except RuntimeError as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+async def delete_node(graph_id: int, node_name: str) -> str:
+    """Deletes a node from an agent-owned graph."""
+    c = get_client()
+    try:
+        if not await c.is_agent_owned(graph_id):
+            return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
+        
+        await c.delete_node(graph_id, node_name)
+        return f"Node '{node_name}' deleted successfully from graph {graph_id}."
+    except RuntimeError as e:
+        return f"Error: {str(e)}"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IR-Graph MCP Server")
     parser.add_argument("--api-url", default="http://localhost:8000", help="Base URL for the IR Graph API")
