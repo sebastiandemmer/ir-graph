@@ -22,7 +22,11 @@ def get_client(api_url: str = "http://localhost:8000"):
 async def get_graph_resource(graph_id: int) -> str:
     """Returns the full state of the specified graph."""
     c = get_client()
-    graph = await c.get_graph(graph_id)
+    try:
+        graph = await c.get_graph(graph_id)
+    except RuntimeError as e:
+        return f"Error: {str(e)}. Please ensure the web server is running."
+    
     if not graph:
         return f"Error: Graph {graph_id} not found."
     return json.dumps(graph, indent=2)
