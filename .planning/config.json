@@ -1,0 +1,13 @@
+{
+  "workflow": {
+    "prefer_parallel": true,
+    "skip_research": false,
+    "auto_approve": false
+  },
+  "tech_stack": {
+    "backend": "FastAPI",
+    "frontend": "Vanilla JS",
+    "database": "SQLite",
+    "mcp": "mcp-python-sdk"
+  }
+}
