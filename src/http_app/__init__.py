@@ -77,6 +77,10 @@ def create_app(
     init_routes(app)
     # FastAPIInstrumentor.instrument_app(app)
 
+    # Mount MCP server at /mcp
+    from src.mcp_server import mcp
+    app.mount("/mcp", mcp.sse_app())
+
     return app
 
 
