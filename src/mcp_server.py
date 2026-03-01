@@ -1,5 +1,5 @@
 from mcp.server.fastmcp import FastMCP
-from .mcp_client import IRGraphClient
+from src.mcp_client import IRGraphClient
 import argparse
 import asyncio
 import sys
@@ -14,7 +14,7 @@ client = None
 def get_client(api_url: str = "http://localhost:8000"):
     global client
     if client is None:
-        from .mcp_client import IRGraphClient
+        from src.mcp_client import IRGraphClient
         client = IRGraphClient(api_url)
     return client
 
