@@ -71,6 +71,8 @@ dev = [
     "ruff",
     "strawberry-graphql[debug-server,fastapi]",
     "pymdown-extensions",
+    "respx>=0.22.0",
+    "pytest-asyncio>=1.3.0",
 ]
 
 [build-system]
