@@ -18,3 +18,4 @@ run_REMOVE_ME.py
 skills/
 .agent/
 .gemini/
+mcp_server.log
