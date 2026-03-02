@@ -56,6 +56,14 @@ class IRGraphClient:
         except httpx.ConnectError:
             raise RuntimeError("IR Graph API unreachable")
 
+    async def update_edge(self, graph_id: int, edge_data: Dict[str, Any]):
+        try:
+            # Assuming PATCH /api/graphs/{graph_id}/edges for updates
+            response = await self.client.patch(f"/api/graphs/{graph_id}/edges", json=edge_data)
+            response.raise_for_status()
+        except httpx.ConnectError:
+            raise RuntimeError("IR Graph API unreachable")
+
     async def delete_node(self, graph_id: int, node_id: str):
         try:
             # Assuming DELETE /api/graphs/{graph_id}/nodes?node_name={node_id}

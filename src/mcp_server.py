@@ -96,7 +96,7 @@ async def create_graph(name: str) -> str:
         return f"Error: {str(e)}"
 
 @mcp.tool()
-async def add_node(graph_id: int, name: str, category: str = "Default", description: str = None) -> str:
+async def add_node(graph_id: int, name: str, category: str = "Default", description: str = None, position_x: int = None, position_y: int = None) -> str:
     """Adds a new node to an agent-owned graph."""
     logger.info(f"Adding node '{name}' to graph {graph_id}")
     c = get_client()
@@ -105,7 +105,13 @@ async def add_node(graph_id: int, name: str, category: str = "Default", descript
             logger.warning(f"Permission denied for adding node to graph {graph_id}")
             return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
         
-        node_data = {"name": name, "category": category, "description": description}
+        node_data = {
+            "name": name, 
+            "category": category, 
+            "description": description,
+            "position_x": position_x,
+            "position_y": position_y
+        }
         await c.add_node(graph_id, node_data)
         return f"Node '{name}' added successfully to graph {graph_id}."
     except Exception as e:
@@ -130,7 +136,7 @@ async def add_edge(graph_id: int, source_node: str, target_node: str, descriptio
         return f"Error: {str(e)}"
 
 @mcp.tool()
-async def update_node(graph_id: int, node_name: str, new_name: str = None, category: str = "Default", description: str = None) -> str:
+async def update_node(graph_id: int, node_name: str, new_name: str = None, category: str = "Default", description: str = None, position_x: int = None, position_y: int = None) -> str:
     """Updates an existing node in an agent-owned graph."""
     logger.info(f"Updating node '{node_name}' in graph {graph_id}")
     c = get_client()
@@ -142,12 +148,36 @@ async def update_node(graph_id: int, node_name: str, new_name: str = None, categ
         node_data = {
             "name": new_name if new_name else node_name,
             "category": category,
-            "description": description
+            "description": description,
+            "position_x": position_x,
+            "position_y": position_y
         }
         await c.update_node(graph_id, node_name, node_data)
         return f"Node '{node_name}' updated successfully in graph {graph_id}."
     except Exception as e:
         logger.error(f"Error updating node in graph {graph_id}: {str(e)}")
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+async def update_edge(graph_id: int, source_node: str, target_node: str, description: str = None, style: str = "solid") -> str:
+    """Updates an existing edge between two nodes in an agent-owned graph."""
+    logger.info(f"Updating edge from '{source_node}' to '{target_node}' in graph {graph_id}")
+    c = get_client()
+    try:
+        if not await c.is_agent_owned(graph_id):
+            logger.warning(f"Permission denied for updating edge in graph {graph_id}")
+            return "Permission Denied: AI agents can only modify graphs containing '(agent)' in their name."
+        
+        edge_data = {
+            "start_node": source_node, 
+            "end_node": target_node, 
+            "description": description,
+            "style": style
+        }
+        await c.update_edge(graph_id, edge_data)
+        return f"Edge from '{source_node}' to '{target_node}' updated successfully in graph {graph_id}."
+    except Exception as e:
+        logger.error(f"Error updating edge in graph {graph_id}: {str(e)}")
         return f"Error: {str(e)}"
 
 @mcp.tool()
