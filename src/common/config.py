@@ -1,3 +1,4 @@
+import sys
 import json
 from typing import Any, Dict, Literal, Optional
 from pathlib import Path
@@ -63,4 +64,4 @@ class AppConfig(BaseSettings):
                 config_data = json.load(f)
                 self.UI_CONFIG = UIConfig.model_validate(config_data)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Warning: Could not load UI config from {path}. Using defaults. Error: {e}")
+            print(f"Warning: Could not load UI config from {path}. Using defaults. Error: {e}", file=sys.stderr)

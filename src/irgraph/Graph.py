@@ -163,3 +163,12 @@ class Graph(object):
             'nodes': [vars(node) for node in self.nodes],
             'edges': [ edge.toJSON() for edge in self.edges]
         }
+
+    def to_networkx(self):
+        import networkx as nx
+        G = nx.DiGraph()
+        for node in self.nodes:
+            G.add_node(node.name, **vars(node))
+        for edge in self.edges:
+            G.add_edge(edge.start.name, edge.end.name, description=edge.description, style=edge.style)
+        return G

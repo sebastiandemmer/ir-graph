@@ -15,6 +15,14 @@ class IRGraphClient:
         except httpx.ConnectError:
             raise RuntimeError("IR Graph API unreachable")
 
+    async def list_graphs(self) -> list[Dict[str, Any]]:
+        try:
+            response = await self.client.get("/api/graphs/")
+            response.raise_for_status()
+            return response.json()
+        except httpx.ConnectError:
+            raise RuntimeError("IR Graph API unreachable")
+
     async def create_graph(self, name: str) -> Dict[str, Any]:
         if not name.strip().endswith("(agent)"):
             name = f"{name.strip()} (agent)"
@@ -53,6 +61,14 @@ class IRGraphClient:
             # Assuming DELETE /api/graphs/{graph_id}/nodes?node_name={node_id}
             response = await self.client.delete(f"/api/graphs/{graph_id}/nodes", params={"node_name": node_id})
             response.raise_for_status()
+        except httpx.ConnectError:
+            raise RuntimeError("IR Graph API unreachable")
+
+    async def get_blast_radius(self, graph_id: int, node_name: str) -> Dict[str, Any]:
+        try:
+            response = await self.client.get(f"/api/graphs/{graph_id}/blast-radius/{node_name}")
+            response.raise_for_status()
+            return response.json()
         except httpx.ConnectError:
             raise RuntimeError("IR Graph API unreachable")
 

@@ -29,6 +29,7 @@ dependencies = [
     "sqlalchemy-bind-manager",
     "structlog<25.4.1,>=25.4.0",
     "mcp>=1.26.0",
+    "networkx",
 ]
 
 [dependency-groups]

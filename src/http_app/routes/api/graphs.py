@@ -48,6 +48,7 @@ async def create_graph(graph: GraphModel):
     #TODO replace with proper append method
     graphs.graphs.append(new_graph)
     graphs.save_to_json()
+    return new_graph.toJSON()
 
 
 @router.get("/graphs/{graph_id}/nodes")
@@ -146,6 +147,21 @@ async def duplicate_graph(graph_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
     graphs.save_to_json()
     return {"new_graph_id": new_id, "message": "Graph duplicated"}
+
+@router.get("/graphs/{graph_id}/blast-radius/{node_name}")
+async def get_blast_radius(graph_id: int, node_name: str):
+    import networkx as nx
+    graph = graphs.get_graph_by_id(graph_id)
+    if not graph:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
+    
+    if not graph.get_node_by_name(node_name):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")
+
+    G = graph.to_networkx()
+    # descendants returns all nodes reachable from the source
+    blast_radius = list(nx.descendants(G, node_name))
+    return {"blast_radius": blast_radius, "node": node_name}
 
 @router.delete("/graphs/{graph_id}/edges")
 async def delete_edge(graph_id: int, start_node: str, end_node: str):

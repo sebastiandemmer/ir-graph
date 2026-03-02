@@ -1,12 +1,12 @@
 # Roadmap - IR Graph MCP Integration
 
 ## Phase 1: MCP Server Foundation & Integration
-- [ ] Set up `FastMCP` server instance.
-- [ ] Implement read-only Resource: `graph://{graph_id}`.
-- [ ] Implement basic CRUD Tools: `add_node`, `add_edge`, `update_node`, `delete_node`.
-- [ ] Mount MCP server into FastAPI (SSE transport).
-- [ ] Create standalone CLI entry point (stdio transport).
-- [ ] **Verification:** Successfully connect Claude Desktop (stdio) and verify graph mutations.
+- [x] Set up `FastMCP` server instance.
+- [x] Implement read-only Resource: `graph://{graph_id}`.
+- [x] Implement CRUD Tools: `create_graph`, `add_node`, `add_edge`, `update_node`, `delete_node`.
+- [x] Mount MCP server into FastAPI (SSE transport).
+- [x] Create standalone CLI entry point (stdio transport).
+- [x] **Verification:** Successfully connect Claude Desktop (stdio) and verify graph mutations.
 
 ## Phase 2: Advanced IR Algorithms (NetworkX)
 - [ ] Integrate `NetworkX` library.
