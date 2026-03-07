@@ -17,3 +17,11 @@ async def hello(request: Request):
         context={},
     )
 
+
+@router.get("/categories", response_class=HTMLResponse, include_in_schema=True)
+async def categories_page(request: Request):
+    return templates.TemplateResponse(
+        name="categories.html",
+        request=request,
+        context={},
+    )

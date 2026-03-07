@@ -65,3 +65,15 @@ class AppConfig(BaseSettings):
                 self.UI_CONFIG = UIConfig.model_validate(config_data)
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Warning: Could not load UI config from {path}. Using defaults. Error: {e}", file=sys.stderr)
+
+    def save_ui_config(self, path: str = "data/config.json") -> None:
+        try:
+            if path == "data/config.json":
+                resolved_path = Path(__file__).parent.parent / "data" / "config.json"
+                path = str(resolved_path)
+
+            with open(path, "w") as f:
+                json.dump(self.UI_CONFIG.model_dump(), f, indent=2)
+        except OSError as e:
+            print(f"Warning: Could not save UI config to {path}. Error: {e}", file=sys.stderr)
+            raise

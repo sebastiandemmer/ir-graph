@@ -1,23 +1,96 @@
 {
   "node_categories": [
     {
-      "name": "Computer",
-      "icon": "/static/assets/computer.svg"
+      "name": "Workstation",
+      "icon": "/static/assets/workstation.svg"
     },
     {
       "name": "Server",
       "icon": "/static/assets/server.svg"
     },
     {
-      "name": "User",
+      "name": "Domain Controller",
+      "icon": "/static/assets/domain_controller.svg"
+    },
+    {
+      "name": "File Server",
+      "icon": "/static/assets/file_server.svg"
+    },
+    {
+      "name": "Database",
+      "icon": "/static/assets/database.svg"
+    },
+    {
+      "name": "Firewall",
+      "icon": "/static/assets/firewall.svg"
+    },
+    {
+      "name": "VPN Gateway",
+      "icon": "/static/assets/vpn.svg"
+    },
+    {
+      "name": "Router/Switch",
+      "icon": "/static/assets/router.svg"
+    },
+    {
+      "name": "Mobile Device",
+      "icon": "/static/assets/mobile_device.svg"
+    },
+    {
+      "name": "Cloud Compute",
+      "icon": "/static/assets/cloud_compute.svg"
+    },
+    {
+      "name": "Cloud Storage",
+      "icon": "/static/assets/cloud_storage.svg"
+    },
+    {
+      "name": "IAM Role",
+      "icon": "/static/assets/iam_role.svg"
+    },
+    {
+      "name": "Microsoft 365",
+      "icon": "/static/assets/office365.svg"
+    },
+    {
+      "name": "Okta/IdP",
+      "icon": "/static/assets/okta.svg"
+    },
+    {
+      "name": "Salesforce",
+      "icon": "/static/assets/salesforce.svg"
+    },
+    {
+      "name": "User Account",
       "icon": "/static/assets/user.svg"
     },
     {
-      "name": "Dummy User",
-      "icon": "/static/assets/user.svg"
+      "name": "Admin Account",
+      "icon": "/static/assets/admin_account.svg"
     },
     {
-      "name": "Default"
+      "name": "Service Account",
+      "icon": "/static/assets/service_account.svg"
+    },
+    {
+      "name": "C2 Server",
+      "icon": "/static/assets/c2_server.svg"
+    },
+    {
+      "name": "Malicious Domain",
+      "icon": "/static/assets/malicious_domain.svg"
+    },
+    {
+      "name": "Exfil Bucket",
+      "icon": "/static/assets/exfil_bucket.svg"
+    },
+    {
+      "name": "Threat Actor",
+      "icon": "/static/assets/attacker.svg"
+    },
+    {
+      "name": "Default",
+      "icon": null
     }
   ],
   "color_schemes": {

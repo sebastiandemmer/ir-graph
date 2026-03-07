@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Manager — IR Graphs</title>
+    <meta name="description" content="Manage node categories and icons for the IR Graph editor.">
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static', path='/favicon.svg') }}" rel="icon" type="image/svg+xml" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+        rel="stylesheet" />
+    <style>
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+
+        /* Override global overflow:hidden / height:100vh from style.css */
+        html,
+        body {
+            height: auto !important;
+            min-height: 100vh;
+            overflow: auto !important;
+        }
+
+        /* ── Page Layout ──────────────────────────────────── */
+        body {
+            background: var(--bg-primary, #f5f4f7);
+        }
+
+        .cm-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px 64px;
+        }
+
+        /* ── Top Bar ─────────────────────────────────────── */
+        .cm-topbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .cm-topbar a.back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border, #e2dce8);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary, #4b4453);
+            text-decoration: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .cm-topbar a.back-btn:hover {
+            background: var(--bg-secondary, #f9f8fa);
+            border-color: var(--accent, #845ec2);
+            color: var(--accent, #845ec2);
+        }
+
+        .cm-topbar h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary, #4b4453);
+            margin: 0;
+        }
+
+        .cm-topbar .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary, #b0a8b9);
+            margin: 0;
+        }
+
+        /* ── Add Category Form Card ───────────────────────── */
+        .cm-add-card {
+            margin-bottom: 28px;
+        }
+
+        .cm-add-card .add-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .cm-add-card .add-row .form-group {
+            flex: 1;
+            min-width: 180px;
+            margin-bottom: 0;
+        }
+
+        .cm-add-card .add-row .btn {
+            flex-shrink: 0;
+            height: 42px;
+        }
+
+        /* ── Category Grid ───────────────────────────────── */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .category-card {
+            background: white;
+            border: 1.5px solid var(--border, #e2dce8);
+            border-radius: 12px;
+            padding: 20px 16px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: box-shadow 0.15s, border-color 0.15s;
+            position: relative;
+        }
+
+        .category-card:hover {
+            box-shadow: 0 4px 16px rgba(132, 94, 194, 0.1);
+            border-color: var(--accent, #845ec2);
+        }
+
+        .category-card .cat-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary, #f9f8fa);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border, #e2dce8);
+        }
+
+        .category-card .cat-icon-wrapper img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .category-card .cat-icon-wrapper .no-icon {
+            color: var(--text-muted, #b0a8b9);
+            font-size: 32px;
+        }
+
+        .category-card .cat-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary, #4b4453);
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .category-card .cat-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .category-card .cat-actions .btn {
+            padding: 6px 10px;
+            font-size: 12px;
+            gap: 4px;
+        }
+
+        .category-card .cat-actions .btn .material-symbols-rounded {
+            font-size: 16px;
+        }
+
+        .protected-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            background: var(--bg-secondary, #f0edf5);
+            color: var(--text-secondary, #b0a8b9);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+
+        /* ── Empty state ──────────────────────────────────── */
+        .cm-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary, #b0a8b9);
+        }
+
+        .cm-empty .material-symbols-rounded {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* ── Icon upload drop zone ─────────────────────────── */
+        .icon-dropzone {
+            border: 2px dashed var(--border, #e2dce8);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .icon-dropzone:hover,
+        .icon-dropzone.drag-over {
+            border-color: var(--accent, #845ec2);
+            background: rgba(132, 94, 194, 0.04);
+        }
+
+        .icon-dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .icon-dropzone .dz-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .icon-dropzone .dz-label .material-symbols-rounded {
+            font-size: 32px;
+            color: var(--accent, #845ec2);
+        }
+
+        .icon-dropzone .dz-label span.dz-text {
+            font-size: 13px;
+            color: var(--text-secondary, #b0a8b9);
+        }
+
+        .icon-dropzone .dz-label span.dz-filename {
+            font-size: 12px;
+            color: var(--accent, #845ec2);
+            font-weight: 600;
+        }
+
+        .icon-preview-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .icon-preview-row img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border: 1px solid var(--border, #e2dce8);
+            border-radius: 8px;
+            background: var(--bg-secondary, #f9f8fa);
+        }
+
+        .icon-preview-row .no-icon-placeholder {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border, #e2dce8);
+            border-radius: 8px;
+            background: var(--bg-secondary, #f9f8fa);
+            color: var(--text-muted, #b0a8b9);
+        }
+
+        .icon-preview-row .no-icon-placeholder .material-symbols-rounded {
+            font-size: 28px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cm-page">
+
+        <!-- Top Bar -->
+        <div class="cm-topbar">
+            <a href="/" class="back-btn">
+                <span class="material-symbols-rounded" style="font-size:18px">arrow_back</span>
+                Back to Editor
+            </a>
+            <div>
+                <h1>Category Manager</h1>
+                <p class="subtitle">Create, edit and delete node categories. Changes are saved immediately.</p>
+            </div>
+        </div>
+
+        <!-- Add Category Card -->
+        <section class="card cm-add-card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon">add_circle</span>
+                <h2>Add Category</h2>
+            </div>
+            <form id="add-category-form">
+                <div class="add-row">
+                    <div class="form-group">
+                        <label for="new-category-name">Name</label>
+                        <input type="text" id="new-category-name" placeholder="e.g. Jump Server" required>
+                    </div>
+                    <button type="submit" id="add-category-btn" class="btn btn-primary">
+                        <span class="material-symbols-rounded" style="font-size:18px">add</span>
+                        Add Category
+                    </button>
+                </div>
+                <div class="form-group" style="margin-top:14px">
+                    <label>Icon (optional — upload after creating, or pick one now)</label>
+                    <div class="icon-dropzone" id="add-icon-dropzone">
+                        <input type="file" id="add-icon-file" accept=".svg,.png,.jpg,.jpeg">
+                        <div class="dz-label">
+                            <span class="material-symbols-rounded">upload_file</span>
+                            <span class="dz-text">Click or drag & drop an SVG / PNG</span>
+                            <span class="dz-filename" id="add-icon-filename"></span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Category Grid -->
+        <section class="card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon">category</span>
+                <h2>All Categories <span id="cat-count-badge" class="badge" style="margin-left:8px"></span></h2>
+            </div>
+            <div id="category-grid" class="category-grid">
+                <div class="cm-empty">
+                    <span class="material-symbols-rounded">sync</span>
+                    Loading…
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ── Edit Modal ───────────────────────────────────────────────────── -->
+    <div id="edit-modal" class="modal-overlay" style="display:none">
+        <div class="modal card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon">edit</span>
+                <h2>Edit Category</h2>
+            </div>
+            <form id="edit-category-form">
+                <input type="hidden" id="edit-original-name">
+                <div class="form-group">
+                    <label for="edit-category-name">Name</label>
+                    <input type="text" id="edit-category-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Current Icon</label>
+                    <div class="icon-preview-row">
+                        <div id="edit-current-icon-wrap">
+                            <div class="no-icon-placeholder">
+                                <span class="material-symbols-rounded">hide_image</span>
+                            </div>
+                        </div>
+                        <span id="edit-current-icon-name" style="font-size:12px;color:var(--text-secondary,#b0a8b9)">No
+                            icon</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload New Icon</label>
+                    <div class="icon-dropzone" id="edit-icon-dropzone">
+                        <input type="file" id="edit-icon-file" accept=".svg,.png,.jpg,.jpeg">
+                        <div class="dz-label">
+                            <span class="material-symbols-rounded">upload_file</span>
+                            <span class="dz-text">Click or drag & drop to replace</span>
+                            <span class="dz-filename" id="edit-icon-filename"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-edit" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Confirm Modal ───────────────────────────────────────────────── -->
+    <div id="confirm-modal" class="modal-overlay" style="display:none">
+        <div class="modal card">
+            <div class="card-header">
+                <span class="material-symbols-rounded icon text-danger">warning</span>
+                <h2>Confirm Delete</h2>
+            </div>
+            <p id="confirm-message">Are you sure?</p>
+            <div class="modal-actions">
+                <button type="button" id="cancel-confirm" class="btn btn-outline">Cancel</button>
+                <button type="button" id="ok-confirm" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script src="{{ url_for('static', path='/categories.js') }}"></script>
+</body>
+
+</html>
