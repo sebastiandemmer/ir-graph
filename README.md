@@ -5,14 +5,18 @@
 ## Key Features
 
 *   **Interactive Graph Visualization**: Render and interact with nodes and edges representing IR entities.
-*   **Persistence**: Automatically saves and loads graph data to/from JSON, ensuring your investigation state is preserved between sessions.
-*   **Customization**: Support for custom icons, node categories, and configurable color schemes.
-*   **Multi-Graph Support**: Manage separate graphs for different investigations or different aspects of a single case (e.g., Timeline vs. Entity Relationship).
-*   **Export**: Render and export your graphs to PNG images for reporting.
+*   **Persistence**: Automatically saves and loads graph data to/from JSON.
+*   **Category Management**: Specialized admin page to create, edit, and delete node categories with custom icon support.
+*   **Customization**: Curated set of 20+ built-in icons for common IR entities (Workstations, Servers, Cloud assets, etc.).
+*   **Multi-Graph Support**: Manage separate graphs for different investigations.
+*   **Export/Import**: 
+    *   Export current view to PNG for reports.
+    *   Export/Import graphs as portable JSON files to share with other analysts.
+*   **Modern UI**: Sleek, minimalist design with icon-rich dropdowns and responsive layout.
 
 ## Installation
 
-This project is built with Python 3.10+ and uses [uv](https://github.com/astral-sh/uv) (or PDM) for dependency management.
+This project is built with Python 3.10+ and uses [uv](https://github.com/astral-sh/uv) (or standard `pip`) for dependency management.
 
 ### Prerequisites
 *   Python 3.10 or higher
@@ -43,40 +47,43 @@ This project is built with Python 3.10+ and uses [uv](https://github.com/astral-
 
 ### Starting the Development Server
 
-1.  **Activate the environment** (if not using `uv run`):
-    ```bash
-    source .venv/bin/activate
-    ```
+The easiest way to start the server is to use the provided script (which checks for a running instance):
 
-2.  **Run the server**:
-    The easiest way to run the local development server (with hot-reload):
+```bash
+./start_server.sh
+```
+
+Alternatively, you can run the dev server directly:
     
-    ```bash
-    # Run the dev server script
-    python src/http_app/dev_server.py
-    ```
+```bash
+python src/http_app/dev_server.py
+```
     
-    The server will start at `http://0.0.0.0:8000`.
+The server will start at `http://localhost:8000`.
 
 ### Key Operations
 *   **Access the UI**: Open your browser to `http://localhost:8000`.
-*   **Save/Load**: Graphs are automatically saved to `graphs.json` on shutdown and loaded on startup.
+*   **Manage Categories**: Click the ⚙️ icon in the sidebar header to access the Category Manager.
+*   **Save/Load**: Data is automatically saved to `graphs.json` and `config.json`.
+*   **Export/Import**: Use the **Actions** section in the sidebar to export to PNG/JSON or import a graph.
 
 ## Roadmap & Status
 
 ### Implemented
 - [x] **Core Graph**: Node/Edge creation and manipulation.
-- [x] **Persistence**: Auto-saving to JSON on every modification to prevent data loss.
-- [x] **Visuals**: Custom icons (SVG/PNG), basic coloring.
-- [x] **Management**: Multi-graph switching.
+- [x] **Persistence**: Auto-saving to JSON (graphs and UI configuration).
+- [x] **Category Management**: Dedicated UI for full CRUD operations on categories and custom icon uploads.
+- [x] **Visuals**: 20+ built-in high-quality SVG icons for IR entities.
+- [x] **Management**: Multi-graph switching and portable JSON Export/Import.
 - [x] **Interaction**:
     -   Radial Context Menus for nodes and edges.
     -   Drag-and-drop edge creation (Edgehandles).
     -   Undo/Redo support.
+    -   Icon-rich category pickers.
 - [x] **Serving**: FastAPI backend with static file serving.
 
 ### Future Work
-- [ ] **Database Integration**: Migrate from JSON validation to SQLite/SQL for scalable persistence.
+- [ ] **Database Integration**: Migrate from JSON to SQLite/Postgres for scalable persistence.
 - [ ] **Advanced Views**:
     -   *Lateral Movement Graph*: Specialized layout for attack paths.
     -   *Timeline Graph*: Temporal visualization of events.
