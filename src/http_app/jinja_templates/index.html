@@ -34,8 +34,20 @@
         <!-- Side Panel -->
         <aside class="side-panel">
             <header class="panel-header">
-                <h1>IR Graph Editor</h1>
-                <p class="subtitle">v2.1</p>
+                <div>
+                    <h1>IR Graph Editor</h1>
+                    <p class="subtitle">v2.1</p>
+                </div>
+                <a href="/categories" title="Manage Categories" style="
+                    display:inline-flex;align-items:center;justify-content:center;
+                    width:36px;height:36px;border-radius:8px;
+                    border:1.5px solid var(--border,#e2dce8);
+                    color:var(--text-secondary,#b0a8b9);
+                    text-decoration:none;transition:border-color 0.15s,color 0.15s;
+                " onmouseover="this.style.color='#845ec2';this.style.borderColor='#845ec2'"
+                    onmouseout="this.style.color='';this.style.borderColor=''">
+                    <span class="material-symbols-rounded" style="font-size:20px">settings</span>
+                </a>
             </header>
 
             <div class="panel-content">
@@ -81,8 +93,17 @@
                             <input type="text" id="node-name" name="node-name" required placeholder="Node Name">
                         </div>
                         <div class="form-group">
-                            <label for="node-category">Category</label>
-                            <select id="node-category" name="node-category"></select>
+                            <label>Category</label>
+                            <div class="cat-picker" id="cat-picker-add">
+                                <input type="hidden" id="node-category" name="node-category" value="Default">
+                                <button type="button" class="cat-picker-trigger" aria-haspopup="listbox"
+                                    aria-expanded="false">
+                                    <span class="material-symbols-rounded cat-picker-placeholder-icon">category</span>
+                                    <span class="cat-picker-label">Default</span>
+                                    <span class="material-symbols-rounded cat-picker-arrow">expand_more</span>
+                                </button>
+                                <div class="cat-picker-dropdown" role="listbox"></div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="node-description">Description</label>
@@ -107,11 +128,11 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Create New Graph</button>
                     </form>
-                    <div class="card-footer-action">
-                        <button id="rename-graph-btn" type="button" class="btn btn-outline btn-full-width"
-                            style="margin-bottom: 8px;">Rename Current Graph</button>
-                        <button id="duplicate-graph-btn" type="button" class="btn btn-outline btn-full-width"
-                            style="margin-bottom: 8px;">Duplicate Current Graph</button>
+                    <div class="card-footer-action" style="display:flex; flex-direction:column; gap:8px;">
+                        <button id="rename-graph-btn" type="button" class="btn btn-outline btn-full-width">Rename
+                            Current Graph</button>
+                        <button id="duplicate-graph-btn" type="button" class="btn btn-outline btn-full-width">Duplicate
+                            Current Graph</button>
                         <button id="delete-graph-btn" class="btn btn-danger btn-full-width">Delete Current
                             Graph</button>
                     </div>
@@ -131,6 +152,15 @@
                                 <span class="material-symbols-rounded">image</span> Export PNG
                             </button>
                         </form>
+                        <button id="export-graph-json-btn" type="button" class="btn btn-outline"
+                            title="Export current graph as JSON">
+                            <span class="material-symbols-rounded">download</span> Export JSON
+                        </button>
+                        <button id="import-graph-json-btn" type="button" class="btn btn-outline"
+                            title="Import graph from JSON file">
+                            <span class="material-symbols-rounded">upload</span> Import JSON
+                        </button>
+                        <input type="file" id="import-graph-json-input" accept=".json" style="display:none">
                     </div>
                 </section>
             </div>
@@ -186,8 +216,16 @@
                     <input type="text" id="edit-node-name" name="edit-node-name" required>
                 </div>
                 <div class="form-group">
-                    <label for="edit-node-category">Category</label>
-                    <select id="edit-node-category" name="edit-node-category"></select>
+                    <label>Category</label>
+                    <div class="cat-picker" id="cat-picker-edit">
+                        <input type="hidden" id="edit-node-category" name="edit-node-category" value="Default">
+                        <button type="button" class="cat-picker-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="material-symbols-rounded cat-picker-placeholder-icon">category</span>
+                            <span class="cat-picker-label">Default</span>
+                            <span class="material-symbols-rounded cat-picker-arrow">expand_more</span>
+                        </button>
+                        <div class="cat-picker-dropdown" role="listbox"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="edit-node-description">Description</label>

@@ -121,6 +121,109 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Fetches UI configuration and populates relevant UI elements.
      */
+    // ── Custom Category Picker ───────────────────────────────────────────────
+
+    /**
+     * Build and wire a custom icon+text category picker.
+     * @param {string} pickerId  - id of the .cat-picker container div
+     * @param {string} inputId   - id of the hidden <input> that holds the value
+     * @param {Array}  categories - [{name, icon?}, ...] from uiConfig
+     * @param {string} selected  - initially selected category name
+     */
+    function buildCategoryPicker(pickerId, inputId, categories, selected = 'Default') {
+        const picker = document.getElementById(pickerId);
+        const hiddenInput = document.getElementById(inputId);
+        const trigger = picker.querySelector('.cat-picker-trigger');
+        const dropdown = picker.querySelector('.cat-picker-dropdown');
+
+        // Build the option list
+        dropdown.innerHTML = '';
+        categories.forEach(cat => {
+            const opt = document.createElement('div');
+            opt.className = 'cat-picker-option' + (cat.name === selected ? ' selected' : '');
+            opt.dataset.value = cat.name;
+            opt.setAttribute('role', 'option');
+
+            if (cat.icon) {
+                const img = document.createElement('img');
+                img.src = cat.icon;
+                img.alt = '';
+                opt.appendChild(img);
+            } else {
+                const placeholder = document.createElement('span');
+                placeholder.className = 'cat-no-icon material-symbols-rounded';
+                placeholder.textContent = 'category';
+                opt.appendChild(placeholder);
+            }
+
+            const label = document.createElement('span');
+            label.textContent = cat.name;
+            opt.appendChild(label);
+
+            opt.addEventListener('click', () => {
+                selectPickerValue(picker, hiddenInput, trigger, cat);
+                closePicker(picker, trigger);
+            });
+
+            dropdown.appendChild(opt);
+        });
+
+        // Set initial selected value
+        const initialCat = categories.find(c => c.name === selected) || categories[0];
+        if (initialCat) selectPickerValue(picker, hiddenInput, trigger, initialCat, true);
+
+        // Toggle open/close on trigger click
+        trigger.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = picker.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', String(isOpen));
+        };
+    }
+
+    function selectPickerValue(picker, hiddenInput, trigger, cat, silent = false) {
+        hiddenInput.value = cat.name;
+
+        // Update trigger display
+        // Remove old icon/img/placeholder (first child of trigger)
+        const existingIcon = trigger.querySelector('.cat-picker-icon, .cat-picker-placeholder-icon');
+        if (existingIcon) existingIcon.remove();
+
+        if (cat.icon) {
+            const img = document.createElement('img');
+            img.src = cat.icon;
+            img.alt = '';
+            img.className = 'cat-picker-icon';
+            trigger.insertBefore(img, trigger.firstChild);
+        } else {
+            const span = document.createElement('span');
+            span.className = 'material-symbols-rounded cat-picker-placeholder-icon';
+            span.textContent = 'category';
+            trigger.insertBefore(span, trigger.firstChild);
+        }
+
+        trigger.querySelector('.cat-picker-label').textContent = cat.name;
+
+        // Mark selected in dropdown
+        picker.querySelectorAll('.cat-picker-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.value === cat.name);
+        });
+    }
+
+    function closePicker(picker, trigger) {
+        picker.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    // Close any open picker when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.cat-picker.open').forEach(p => {
+            p.classList.remove('open');
+            p.querySelector('.cat-picker-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    // ── UI Config / Category Fetch ───────────────────────────────────────────
+
     async function fetchUiConfig() {
         try {
             const response = await fetch(`${API_BASE_URL}/config`);
@@ -129,27 +232,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             uiConfig = await response.json();
 
-            // Populate the node category dropdown for the sidebar form
-            const nodeCategorySelector = document.getElementById('node-category');
-            if (nodeCategorySelector) {
-                nodeCategorySelector.innerHTML = ''; // Clear existing options
-
-                // Default option
-                const defaultOption = document.createElement('option');
-                defaultOption.value = 'Default';
-                defaultOption.textContent = 'Default';
-                nodeCategorySelector.appendChild(defaultOption);
-
-                if (uiConfig.node_categories) {
-                    uiConfig.node_categories.forEach(category => {
-                        if (category.name !== 'Default') {
-                            const option = document.createElement('option');
-                            option.value = category.name;
-                            option.textContent = category.name;
-                            nodeCategorySelector.appendChild(option);
-                        }
-                    });
-                }
+            // Populate the category picker for the Add Node form
+            if (uiConfig.node_categories) {
+                buildCategoryPicker('cat-picker-add', 'node-category', uiConfig.node_categories, 'Default');
             }
 
         } catch (error) {
@@ -1006,7 +1091,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('edit-node-modal');
         const inputName = document.getElementById('edit-node-name');
         const inputOriginalName = document.getElementById('edit-node-original-name');
-        const selectCategory = document.getElementById('edit-node-category');
         const inputDescription = document.getElementById('edit-node-description');
 
         inputName.value = nodeName;
@@ -1020,25 +1104,10 @@ document.addEventListener('DOMContentLoaded', function () {
             inputDescription.value = '';
         }
 
-        // Populate categories
-        selectCategory.innerHTML = '';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = 'Default';
-        defaultOption.textContent = 'Default';
-        selectCategory.appendChild(defaultOption);
-
+        // Populate category picker and pre-select current category
         if (uiConfig && uiConfig.node_categories) {
-            uiConfig.node_categories.forEach(category => {
-                if (category.name !== 'Default') {
-                    const option = document.createElement('option');
-                    option.value = category.name;
-                    option.textContent = category.name;
-                    selectCategory.appendChild(option);
-                }
-            });
+            buildCategoryPicker('cat-picker-edit', 'edit-node-category', uiConfig.node_categories, nodeCategory || 'Default');
         }
-
-        selectCategory.value = nodeCategory || 'Default';
 
         modal.style.display = 'flex';
     }
@@ -1206,6 +1275,69 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast('Exporting PNG...', 'info');
     }
 
+    // --- JSON Export / Import ---
+
+    async function handleExportGraph() {
+        if (currentGraphId === null) {
+            showToast('No graph selected to export.', 'error');
+            return;
+        }
+        try {
+            const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}/export`);
+            if (!response.ok) throw new Error('Export request failed');
+
+            const blob = await response.blob();
+            const graphName = mainGraphTitle.textContent.trim() || `graph-${currentGraphId}`;
+            const filename = response.headers.get('Content-Disposition')
+                ?.match(/filename="?([^"]+)"?/)?.[1]
+                || `${graphName.replace(/\s+/g, '_')}_graph.json`;
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Graph exported as JSON!', 'success');
+        } catch (error) {
+            console.error(error);
+            showToast('Error exporting graph.', 'error');
+        }
+    }
+
+    async function handleImportGraph(file) {
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+
+            if (!parsed.graph) {
+                showToast('Invalid JSON: missing "graph" key.', 'error');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/graphs/import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ graph: parsed.graph })
+            });
+            if (!response.ok) throw new Error('Import request failed');
+
+            const data = await response.json();
+            showToast(`Graph "${parsed.graph.name}" imported!`, 'success');
+            await fetchAndPopulateGraphSelector(data.new_graph_id);
+        } catch (error) {
+            console.error(error);
+            showToast('Error importing graph. Check file format.', 'error');
+        } finally {
+            // Reset the file input so the same file can be re-selected
+            const fileInput = document.getElementById('import-graph-json-input');
+            if (fileInput) fileInput.value = '';
+        }
+    }
+
     // --- Initial Setup ---
     async function main() {
         await fetchUiConfig();
@@ -1250,6 +1382,18 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error(error);
             showToast('Error duplicating graph.', 'error');
         }
+    });
+
+    // Export JSON
+    document.getElementById('export-graph-json-btn').addEventListener('click', handleExportGraph);
+
+    // Import JSON — button triggers the hidden file input
+    document.getElementById('import-graph-json-btn').addEventListener('click', () => {
+        document.getElementById('import-graph-json-input').click();
+    });
+    document.getElementById('import-graph-json-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleImportGraph(file);
     });
 
     document.getElementById('delete-graph-btn').addEventListener('click', () => {
