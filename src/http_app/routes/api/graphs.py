@@ -1,6 +1,8 @@
 from typing import Iterable
+import json
 
 from fastapi import APIRouter, status, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from http_app import graphs
 
@@ -30,6 +32,10 @@ class NodeModel(BaseModel):
 
 class NodesModel(BaseModel):
     nodes: list[NodeModel]
+
+
+class GraphImportModel(BaseModel):
+    graph: dict
 
 
 router = APIRouter()
@@ -147,6 +153,48 @@ async def duplicate_graph(graph_id: int):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
     graphs.save_to_json()
     return {"new_graph_id": new_id, "message": "Graph duplicated"}
+
+
+@router.get("/graphs/{graph_id}/export")
+async def export_graph(graph_id: int):
+    """Export a single graph as a self-contained JSON file download."""
+    graph = graphs.get_graph_by_id(graph_id)
+    if graph is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
+
+    export_data = {"graph": graph.toJSON()}
+    filename = f"{graph.name.replace(' ', '_')}_graph.json"
+    return JSONResponse(
+        content=export_data,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@router.post("/graphs/import")
+async def import_graph(import_model: GraphImportModel):
+    """Import a graph from a JSON payload and add it as a new graph."""
+    graph_dict = import_model.graph
+
+    # Resolve name collisions by appending " (imported)"
+    desired_name = graph_dict.get("name", "Imported Graph")
+    existing_names = {g.name for g in graphs.graphs}
+    if desired_name in existing_names:
+        base = desired_name
+        desired_name = f"{base} (imported)"
+        # Keep incrementing if still colliding
+        counter = 2
+        while desired_name in existing_names:
+            desired_name = f"{base} (imported {counter})"
+            counter += 1
+    graph_dict["name"] = desired_name
+
+    new_graph = graphs.graph_from_dict(graph_dict)
+    graphs.graphs.append(new_graph)
+    graphs.save_to_json()
+    new_id = len(graphs.graphs) - 1
+    return {"new_graph_id": new_id, "message": "Graph imported"}
 
 @router.get("/graphs/{graph_id}/blast-radius/{node_name}")
 async def get_blast_radius(graph_id: int, node_name: str):
