@@ -271,8 +271,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const graphData = await response.json();
 
+            // Setup UI Toggles from graph config
+            if (edgeModeSelect && graphData.edge_mode) {
+                edgeModeSelect.value = graphData.edge_mode;
+            }
+            if (toggleNodeBorder && graphData.show_node_borders !== undefined) {
+                toggleNodeBorder.checked = graphData.show_node_borders === true;
+            }
+            if (toggleEdgeDesc && graphData.show_edge_descriptions !== undefined) {
+                toggleEdgeDesc.checked = graphData.show_edge_descriptions === true;
+            }
+
             const elements = [];
             let hasPositionData = false;
+
 
             // Transform nodes for Cytoscape
             graphData.nodes.forEach(node => {
@@ -328,7 +340,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     padding: 50
                 },
                 style: getGraphStyles(),
-                wheelSensitivity: 0.2
+                // 'wheelSensitivity': 0.2 generates a warning about mainstream mice unless needed, we can remove it or set it larger to suppress warning but removing is safer.
+                wheelSensitivity: undefined // Fall back to default
             });
 
             cy.on('free', 'node', (event) => {
@@ -336,8 +349,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 debounceSavePositions();
             });
 
-            cy.on('tap', 'core', () => {
-                selectedEdge = null;
+            cy.on('tap', (event) => {
+                if (event.target === cy) {
+                    selectedEdge = null;
+                }
             });
 
             // Allow deleting edge with Delete key
@@ -347,15 +362,39 @@ document.addEventListener('DOMContentLoaded', function () {
             if (currentGraphIdSpan) currentGraphIdSpan.textContent = `ID: ${graphId}`;
 
             // --- Extension Initialization ---
-
             // 1. Undo-Redo
             ur = cy.undoRedo();
+
+            // 4. Context Menu Initialization (edge editing extension injects its commands here)
+            if (cy.contextMenus) {
+                cy.contextMenus({
+                    menuItems: []
+                });
+            }
+
+
+
+            // 5. Context Menu for Core (Background) - REMOVED per user request to move back to sidebar
+            // But user also said "retain ability to add new nodes". 
+            // Previous instruction said "move back". I will remove this to avoid duplication/clutter.
+            /* 
+            cy.cxtmenu({ ... selector: 'core' ... }) 
+            */
+
+
+            // Initialize Edge Editing
+            if (cy.edgeEditing) {
+                cy.edgeEditing({
+                    undoable: true,
+                    enableCreateAnchorOnDrag: true
+                });
+            }
 
             // 2. Edgehandles
             const eh = cy.edgehandles({
                 snap: true,
                 canConnect: function (sourceNode, targetNode) {
-                    return sourceNode !== targetNode; // Prevent self-loops
+                    return true; // Allow multiple and self-loops
                 },
                 complete: function (sourceNode, targetNode, addedEles) {
                     console.log('Edgehandles complete:', sourceNode.id(), '->', targetNode.id());
@@ -444,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 openMenuEvents: 'cxttapstart taphold',
             });
 
-            // 4. Context Menu for Edges
+            // 5. Context Menu for Edges
             cy.cxtmenu({
                 selector: 'edge',
                 commands: [
@@ -472,18 +511,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 fillColor: 'rgba(255, 255, 255, 0.9)',
                 activeFillColor: 'rgba(255, 128, 102, 0.1)',
                 itemColor: '#4b4453',
+                itemTextShadowColor: 'transparent',
                 activeItemColor: '#ff8066',
+                indicatorSize: 24,
+                separatorWidth: 3,
+                spotlightPadding: 4,
                 openMenuEvents: 'cxttapstart taphold',
             });
-
-
-
-            // 5. Context Menu for Core (Background) - REMOVED per user request to move back to sidebar
-            // But user also said "retain ability to add new nodes". 
-            // Previous instruction said "move back". I will remove this to avoid duplication/clutter.
-            /* 
-            cy.cxtmenu({ ... selector: 'core' ... }) 
-            */
 
             // Keyboard shortcuts for Undo/Redo
             document.removeEventListener('keydown', handleGlobalKeyDown);
@@ -539,6 +573,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const showBorder = toggleNodeBorder.checked;
         const showEdgeDesc = toggleEdgeDesc.checked;
         const edgeMode = edgeModeSelect ? edgeModeSelect.value : 'bezier';
+        // Taxi distances
+        const isTaxi = edgeMode === 'taxi' || edgeMode === 'round-taxi';
 
         // Base styles
         const styles = [
@@ -559,22 +595,54 @@ document.addEventListener('DOMContentLoaded', function () {
                     'text-margin-y': function (ele) {
                         return ele.data('category') === 'Default' ? '0px' : '8px';
                     },
+                    'width': function (ele) {
+                        if (ele.data('category') !== 'Default') return 40;
+                        
+                        const defaultCanvas = document.createElement('canvas');
+                        const ctx = defaultCanvas.getContext('2d');
+                        ctx.font = '600 12px Inter, system-ui, sans-serif';
+                        
+                        const name = ele.data('name') || '';
+                        const desc = ele.data('description') || '';
+                        const text = desc ? `${name}\n${desc}` : name;
+                        
+                        const lines = text.split('\n');
+                        let maxWidth = 40;
+                        lines.forEach(l => {
+                            let w = ctx.measureText(l).width;
+                            if (w > maxWidth) maxWidth = w;
+                        });
+                        return Math.min(maxWidth, 150);
+                    },
+                    'height': function (ele) {
+                        if (ele.data('category') !== 'Default') return 40;
+                        
+                        const defaultCanvas = document.createElement('canvas');
+                        const ctx = defaultCanvas.getContext('2d');
+                        ctx.font = '600 12px Inter, system-ui, sans-serif';
+                        
+                        const name = ele.data('name') || '';
+                        const desc = ele.data('description') || '';
+                        const text = desc ? `${name}\n${desc}` : name;
+                        
+                        const lines = text.split('\n');
+                        let virtualLines = 0;
+                        lines.forEach(l => {
+                            let w = ctx.measureText(l).width;
+                            virtualLines += Math.max(1, Math.ceil(w / 150));
+                        });
+                        return Math.max(30, virtualLines * 16); // 16px line-height estimate
+                    },
                     'font-family': 'Inter, system-ui, sans-serif',
                     'font-weight': '600',
                     'font-size': '12px',
                     'background-color': '#ffffff',
                     'border-width': showBorder ? 2 : 0, // Toggle border
                     'border-color': '#b0a8b9',
-                    'width': 'label',
-                    'height': 'label',
                     'padding': '12px',
-                    'shadow-blur': 4,
-                    'shadow-color': 'rgba(0,0,0,0.1)',
-                    'shadow-offset-y': 2,
                     'text-wrap': 'wrap',
                     'text-max-width': '150px',
-                    'text-justification': 'center',
-                    'white-space': 'pre-wrap' // Helper for specific environments, though text-wrap handled by cy
+                    'text-justification': 'center'
                 }
             },
             {
@@ -613,14 +681,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     'target-arrow-color': '#b0a8b9',
                     'target-arrow-shape': 'triangle',
-                    'curve-style': edgeMode,
-                    'control-point-step-size': 40,
+                    'curve-style': function (ele) {
+                        // Force bezier for self-loops to ensure they render
+                        if (ele.source().id() === ele.target().id()) return 'bezier';
+                        if (edgeMode === 'bezier') return 'unbundled-bezier';
+                        return edgeMode;
+                    },
+                    'taxi-direction': 'auto',
+                    'taxi-turn': edgeMode === 'round-taxi' ? 20 : '50%',
+                    'taxi-turn-min-distance': edgeMode === 'round-taxi' ? 5 : 10,
+                    'taxi-radius': edgeMode === 'round-taxi' ? 10 : 0,
                     'arrow-scale': 1.2,
                     'label': showEdgeDesc ? 'data(description)' : '',
                     'text-rotation': 'autorotate',
                     'text-margin-y': -10,
                     'font-size': '10px',
-                    'color': '#4b4453'
+                    'color': '#4b4453',
+                    'text-background-opacity': 1,
+                    'text-background-color': '#ffffff',
+                    'text-background-padding': '3px',
+                    'text-background-shape': 'round-rectangle',
+                    'z-index': 10
                 }
             },
             {
@@ -648,6 +729,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+
+        if (edgeMode === 'bezier') {
+            styles.push({
+                selector: 'edge',
+                style: {
+                    'control-point-step-size': 40,
+                    'control-point-distances': function (ele) {
+                        const source = ele.source();
+                        const target = ele.target();
+                        const parallelEdges = ele.cy().edges().filter(e =>
+                            (e.source().id() === source.id() && e.target().id() === target.id()) ||
+                            (e.source().id() === target.id() && e.target().id() === source.id())
+                        );
+                        const total = parallelEdges.length;
+                        
+                        if (total <= 1) {
+                            return [30];
+                        }
+
+                        const sortedEdges = parallelEdges.toArray().sort((a, b) => a.id().localeCompare(b.id()));
+                        const index = sortedEdges.indexOf(ele);
+                        const step = 40;
+                        return [(index - (total - 1) / 2) * step];
+                    },
+                    'control-point-weights': [0.5]
+                }
+            });
+        }
+
+        if (edgeMode === 'unbundled-bezier') {
+            styles.push({
+                selector: 'edge',
+                style: {
+                    'control-point-distances': [40, -40],
+                    'control-point-weights': [0.250, 0.75]
+                }
+            });
+        }
+
         return styles;
     }
 
@@ -678,6 +798,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 graphSelector.value = currentGraphId;
                 mainGraphTitle.textContent = graphsList[targetId].name || `Graph ${targetId}`;
                 initializeGraph(currentGraphId);
+                history.replaceState(null, '', `?graph=${currentGraphId}`);
             } else {
                 currentGraphId = null;
                 initializeGraph(null);
@@ -1341,7 +1462,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Initial Setup ---
     async function main() {
         await fetchUiConfig();
-        await fetchAndPopulateGraphSelector();
+        const urlParams = new URLSearchParams(window.location.search);
+        let initialGraphId = 0;
+        if (urlParams.has('graph')) {
+            initialGraphId = parseInt(urlParams.get('graph'), 10);
+            if (isNaN(initialGraphId)) initialGraphId = 0;
+        }
+        await fetchAndPopulateGraphSelector(initialGraphId);
     }
 
     // Attach event listeners
@@ -1414,22 +1541,49 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Update view settings on backend
+    async function updateGraphSettings() {
+        if (currentGraphId === null) return;
+        try {
+            const body = {};
+            if (edgeModeSelect) body.edge_mode = edgeModeSelect.value;
+            if (toggleNodeBorder) body.show_node_borders = toggleNodeBorder.checked;
+            if (toggleEdgeDesc) body.show_edge_descriptions = toggleEdgeDesc.checked;
+
+            const response = await fetch(`${API_BASE_URL}/graphs/${currentGraphId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!response.ok) throw new Error('Failed to update settings');
+        } catch (error) {
+            console.error('Failed to update graph settings:', error);
+            showToast('Failed to save settings', 'error');
+        }
+    }
+
     // View Option Toggles
     toggleNodeBorder.addEventListener('change', () => {
         if (cy) {
             cy.style(getGraphStyles());
+            updateGraphSettings();
         }
     });
     toggleEdgeDesc.addEventListener('change', () => {
         if (cy) {
             cy.style(getGraphStyles());
+            updateGraphSettings();
         }
     });
 
     if (edgeModeSelect) {
         edgeModeSelect.addEventListener('change', () => {
             if (cy) {
-                cy.style(getGraphStyles());
+                // The edge-editing extension sets inline styles (like curve-style and control-points) to edges when interacted with. 
+                // We must remove these inline styles so the global stylesheet can take over again when changing modes.
+                cy.edges().removeStyle();
+                cy.style(getGraphStyles()).update();
+                updateGraphSettings();
             }
         });
     }
@@ -1439,6 +1593,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedOption = event.target.options[event.target.selectedIndex];
         mainGraphTitle.textContent = selectedOption.textContent;
         initializeGraph(currentGraphId);
+        history.pushState(null, '', `?graph=${currentGraphId}`);
+    });
+
+    window.addEventListener('popstate', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let graphId = 0;
+        if (urlParams.has('graph')) {
+            graphId = parseInt(urlParams.get('graph'), 10);
+            if (isNaN(graphId)) graphId = 0;
+        }
+        const graphSelector = document.getElementById('graph-selector');
+        if (graphSelector && graphSelector.options && graphSelector.options.length > graphId) {
+            currentGraphId = graphId;
+            graphSelector.value = currentGraphId;
+            const selectedOption = graphSelector.options[graphSelector.selectedIndex];
+            mainGraphTitle.textContent = selectedOption.textContent;
+            initializeGraph(currentGraphId);
+        }
     });
 
     main();

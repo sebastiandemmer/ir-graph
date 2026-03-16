@@ -4,13 +4,18 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
 class Graph(object):
-    def __init__(self, name: str = "", nodes:list = [], edges: list = []):
+    def __init__(self, name: str = "", nodes:list = None, edges: list = None, edge_mode: str = "bezier", show_node_borders: bool = False, show_edge_descriptions: bool = True):
         self.name = name
+        self.edge_mode = edge_mode
+        self.show_node_borders = show_node_borders
+        self.show_edge_descriptions = show_edge_descriptions
         self.nodes = []
-        self.add_nodes(nodes)
+        if nodes:
+            self.add_nodes(nodes)
 
         self.edges = []
-        self.add_edges(edges)
+        if edges:
+            self.add_edges(edges)
 
     def __repr__(self):
         return f"Graph(nodes={self.nodes}, edges={self.edges})"
@@ -160,6 +165,9 @@ class Graph(object):
     def toJSON(self):
         return {
             'name': self.name,
+            'edge_mode': self.edge_mode,
+            'show_node_borders': self.show_node_borders,
+            'show_edge_descriptions': self.show_edge_descriptions,
             'nodes': [vars(node) for node in self.nodes],
             'edges': [ edge.toJSON() for edge in self.edges]
         }

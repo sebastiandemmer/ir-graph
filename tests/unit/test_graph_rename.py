@@ -12,7 +12,7 @@ def test_rename_node_success():
     g.add_edge(Edge(start=n1, end=n2))
     
     # Rename A to C
-    success = g.rename_node("A", "C")
+    success = g.update_node("A", "C")
     assert success is True
     assert g.get_node_by_name("A") is None
     assert g.get_node_by_name("C") is not None
@@ -30,11 +30,11 @@ def test_rename_node_duplicate_fails():
     g.add_node(n2)
     
     # Try to rename A to B
-    success = g.rename_node("A", "B")
+    success = g.update_node("A", "B")
     assert success is False
     assert g.get_node_by_name("A") is not None
 
 def test_rename_node_not_found_fails():
     g = Graph(name="Test Graph")
-    success = g.rename_node("X", "Y")
+    success = g.update_node("X", "Y")
     assert success is False

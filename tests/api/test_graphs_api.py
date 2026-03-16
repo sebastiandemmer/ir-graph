@@ -97,6 +97,5 @@ def test_create_edge(client):
 def test_create_edge_invalid_nodes(client):
     client.post("/api/graphs/", json={"name": "EdgeGraphFail"})
     response = client.post("/api/graphs/0/edges", json={"start_node": "X", "end_node": "Y"})
-    assert response.status_code == 200
-    # Code returns string "Node names incorrect" on failure
-    assert response.json() == "Node names incorrect"
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Node names incorrect"}

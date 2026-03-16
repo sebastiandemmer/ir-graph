@@ -40,19 +40,24 @@ class Graphs(object):
             self.graphs = list(map(self.graph_from_dict, graphs_json))
         
     def graph_from_dict(self, graph_object: dict):
-            graph = Graph(name=graph_object.get("name"))
-            for node in graph_object.get("nodes", []):
-                new_node = Node(
-                    name=node.get("name"), 
-                    category=node.get("category", None), 
-                    position_x=node.get("position_x", None), 
-                    position_y=node.get("position_y", None),
-                    parent=node.get("parent", None)
-                )
-                graph.add_node(new_node)
-            for edge in graph_object.get("edges", []):
-                graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"), style=edge.get("style", "solid"))
-            return graph
+        graph = Graph(
+            name=graph_object.get("name"),
+            edge_mode=graph_object.get("edge_mode", "bezier"),
+            show_node_borders=graph_object.get("show_node_borders", False),
+            show_edge_descriptions=graph_object.get("show_edge_descriptions", True)
+        )
+        for node in graph_object.get("nodes", []):
+            new_node = Node(
+                name=node.get("name"), 
+                category=node.get("category", None), 
+                position_x=node.get("position_x", None), 
+                position_y=node.get("position_y", None),
+                parent=node.get("parent", None)
+            )
+            graph.add_node(new_node)
+        for edge in graph_object.get("edges", []):
+            graph.add_edge_by_node_names(from_name=edge.get("start"), to_name=edge.get("end"), directed=edge.get("directed", True), description=edge.get("description"), style=edge.get("style", "solid"))
+        return graph
 
     def delete_graph(self, graph_id: int) -> bool:
         if 0 <= graph_id < len(self.graphs):
@@ -64,6 +69,18 @@ class Graphs(object):
         graph = self.get_graph_by_id(graph_id)
         if graph:
             graph.name = new_name
+            return True
+        return False
+
+    def update_graph_settings(self, graph_id: int, edge_mode: str = None, show_node_borders: bool = None, show_edge_descriptions: bool = None) -> bool:
+        graph = self.get_graph_by_id(graph_id)
+        if graph:
+            if edge_mode is not None:
+                graph.edge_mode = edge_mode
+            if show_node_borders is not None:
+                graph.show_node_borders = show_node_borders
+            if show_edge_descriptions is not None:
+                graph.show_edge_descriptions = show_edge_descriptions
             return True
         return False
 

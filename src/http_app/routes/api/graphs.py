@@ -14,6 +14,11 @@ class GraphModel(BaseModel):
     # model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
 
+class GraphUpdateModel(BaseModel):
+    name: str | None = None
+    edge_mode: str | None = None
+    show_node_borders: bool | None = None
+    show_edge_descriptions: bool | None = None
 
 class EdgeModel(BaseModel):
     # model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -140,8 +145,20 @@ async def delete_graph(graph_id: int):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")
 
 @router.patch("/graphs/{graph_id}")
-async def update_graph(graph_id: int, graph_model: GraphModel):
-    if graphs.update_graph_name(graph_id, graph_model.name):
+async def update_graph(graph_id: int, graph_model: GraphUpdateModel):
+    updated = False
+    
+    # Update name if provided
+    if graph_model.name is not None:
+        if graphs.update_graph_name(graph_id, graph_model.name):
+            updated = True
+    
+    # Settings updates handles optional kwargs natively
+    if graph_model.edge_mode is not None or graph_model.show_node_borders is not None or graph_model.show_edge_descriptions is not None:
+        if graphs.update_graph_settings(graph_id, edge_mode=graph_model.edge_mode, show_node_borders=graph_model.show_node_borders, show_edge_descriptions=graph_model.show_edge_descriptions):
+            updated = True
+            
+    if updated:
         graphs.save_to_json()
         return {"message": "Graph updated"}
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not found")

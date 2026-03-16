@@ -72,10 +72,11 @@
                         <div class="form-group edge-mode-group">
                             <label for="edge-mode-select">Edge Mode</label>
                             <select id="edge-mode-select" name="edge-mode">
-                                <option value="bezier">Curved (Default)</option>
+                                <option value="bezier">Bezier (Curved)</option>
                                 <option value="straight">Straight</option>
                                 <option value="taxi">Right Angles</option>
-                                <option value="unbundled-bezier">Avoid Overlap</option>
+                                <option value="round-taxi">Round Taxi</option>
+                                <option value="unbundled-bezier">Unbundled Bezier (Parallel)</option>
                             </select>
                         </div>
                     </form>
@@ -308,12 +309,15 @@
     <div id="toast-container"></div>
 
     <!-- Load the Cytoscape.js library from local static file -->
-    <script src="{{ url_for('static', path='/cytoscape.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape.js') }}"></script>
     <!-- Load Cytoscape Extensions -->
-    <script src="{{ url_for('static', path='/lodash.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/lodash.js') }}"></script>
     <script src="{{ url_for('static', path='/cytoscape-edgehandles.js') }}"></script>
     <script src="{{ url_for('static', path='/cytoscape-cxtmenu.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape-context-menus.js') }}"></script>
     <script src="{{ url_for('static', path='/cytoscape-undo-redo.js') }}"></script>
+    <script src="{{ url_for('static', path='/konva.js') }}"></script>
+    <script src="{{ url_for('static', path='/cytoscape-edge-editing.js') }}"></script>
     <!-- Load our custom script -->
     <script src="{{ url_for('static', path='/script.js') }}"></script>
 </body>

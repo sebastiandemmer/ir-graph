@@ -8,14 +8,14 @@ def test_edge_description_initialization():
     n2 = Node("N2")
     edge = Edge(start=n1, end=n2, description="A connection")
     assert edge.description == "A connection"
-    assert str(edge) == "Edge: Node: 'N1' --> Node: 'N2' (A connection)"
+    assert str(edge) == "Edge: Node: 'N1' --> Node: 'N2' (A connection) [solid]"
 
 def test_edge_without_description():
     n1 = Node("N1")
     n2 = Node("N2")
     edge = Edge(start=n1, end=n2)
     assert edge.description is None
-    assert str(edge) == "Edge: Node: 'N1' --> Node: 'N2'"
+    assert str(edge) == "Edge: Node: 'N1' --> Node: 'N2' [solid]"
 
 def test_graph_add_edge_with_description():
     graph = Graph()
